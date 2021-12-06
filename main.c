@@ -275,22 +275,26 @@ static void idle_task( void *pvParameters )
 
 static void communication_task( void *pvParameters )
 {
-	uint8_t tmp[6], count = 0, len;
+	uint8_t tmp[6], count = 0, len, ccl = 0;
 	pvParameters = pvParameters;
 	
 	for(;;)
 	{
-	UART6_DATA tx, *rx;
-		len = sprintf((char*)tmp, "%u", count++);
-		tmp[len] = 0;
-		
-		tx.len = 0;
-		tx.buf[tx.len++] = 'S';
-		tx.buf[tx.len++] = 'C';
-		tx.buf[tx.len++] = '0';
-		tx.buf[tx.len++] = '\r';
-		tx.buf[tx.len++] = '\n';
-		_uart6_send(&tx, &rx, 0);
+		for(; ccl < 10; ccl++)
+		{
+			UART6_DATA tx, *rx;
+			len = sprintf((char*)tmp, "%u", count++);
+			tmp[len] = 0;
+			
+			tx.len = 0;
+			tx.buf[tx.len++] = 'S';
+			tx.buf[tx.len++] = 'C';
+			tx.buf[tx.len++] = '0';
+			tx.buf[tx.len++] = '\r';
+			tx.buf[tx.len++] = '\n';
+			_uart6_send(&tx, &rx, 0);
+			vTaskDelay(1);
+		}
 //		SCUART_Write(SC0, tmp, len);
 //		SCUART_Write(SC0, "\r\n", sizeof("\r\n"));
 		

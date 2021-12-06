@@ -109,7 +109,6 @@ static uint32_t SCUART_GetClock(SC_T *sc)
 uint32_t SCUART_Open(SC_T* sc, uint32_t u32baudrate)
 {
     uint32_t u32Clk = SCUART_GetClock(sc), u32Div;
-uint32_t tmp[6] = {0}, state[15] = {0}, add[5] = {0};
     /* Calculate divider for target baudrate */
     u32Div = (u32Clk + (u32baudrate >> 1) - 1UL) / u32baudrate - 1UL;
 

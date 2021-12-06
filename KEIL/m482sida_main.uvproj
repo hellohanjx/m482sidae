@@ -376,7 +376,7 @@
               <MiscControls></MiscControls>
               <Define>RVDS_ARMCM4_NUC4xx</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Device\Nuvoton\M480\Include;..\Device\Nuvoton\M480\Source\ARM;..\Device\Nuvoton\M480\Source\GCC;..\Device\Nuvoton\M480\Source\IAR;..\Device;..\Device\Nuvoton;..\Device\Nuvoton\M480;..\FreeRTOS\Source\include;..\FreeRTOS;..\..\m482sida_main;..\StdDriver\src;..\StdDriver\inc;..\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\FreeRTOS\Demo\Common\include;..\hardware;..\4G;..\swipe;..\global</IncludePath>
+              <IncludePath>..\Device\Nuvoton\M480\Include;..\Device\Nuvoton\M480\Source\ARM;..\Device\Nuvoton\M480\Source\GCC;..\Device\Nuvoton\M480\Source\IAR;..\Device;..\Device\Nuvoton;..\Device\Nuvoton\M480;..\FreeRTOS\Source\include;..\FreeRTOS;..\..\m482sidae;..\StdDriver\src;..\StdDriver\inc;..\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\FreeRTOS\Demo\Common\include;..\hardware;..\4G;..\swipe;..\global</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

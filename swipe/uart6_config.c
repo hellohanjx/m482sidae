@@ -3,7 +3,7 @@
 #include "pdma.h"
 
 
-static volatile UART6_DATA *rx;	//接收指针
+static volatile UART6_DATA rx;	//接收指针
 static volatile UART6_DATA *tx;	//发送指针
 static CARD_RECV_CALLBACK callBack_recv;//接收处理回调函数
 
@@ -27,7 +27,7 @@ void uart6_config(void)
 	//SC_INTEN_RDAIEN_Msk		接收数据到达中断
 	//SC_INTEN_TERRIEN_Msk	传输错误中断
 	//SC_INTEN_TBEIEN_Msk		发送缓存空中断
-	SCUART_ENABLE_INT(SC0, SC_INTEN_RDAIEN_Msk);//  | SC_INTEN_TBEIEN_Msk);
+	SCUART_ENABLE_INT(SC0, SC_INTEN_RDAIEN_Msk);// | SC_INTEN_TBEIEN_Msk);
 	NVIC_EnableIRQ(SC0_IRQn);
 	
 //	SCUART_CLR_ERR_FLAG(SC0, SC_STATUS_PEF_Msk | SC_STATUS_FEF_Msk | SC_STATUS_BEF_Msk);
@@ -72,11 +72,15 @@ void SC0_IRQHandler(void)
 	if( SCUART_GET_INT_FLAG(SC0, SC_INTSTS_TBEIF_Msk) )//发送缓存空中断
 	{
 		SCUART_CLR_INT_FLAG(SC0,  SC_INTSTS_TBEIF_Msk);//清标志
-		SCUART_DISABLE_INT(SC0, SC_INTEN_TBEIEN_Msk);//关发送中断
-		if(tx->len < tx->size)
+//		SCUART_DISABLE_INT(SC0, SC_INTEN_TBEIEN_Msk);//关发送中断
+//		SCUART_ENABLE_INT(SC0, SC_INTEN_TBEIEN_Msk);//开发送中断
+		if(tx->size < tx->len)
 		{
 			SCUART_WRITE(SC0, tx->buf[tx->size++]);
-			SCUART_ENABLE_INT(SC0, SC_INTEN_TBEIEN_Msk);//开发送中断
+		}
+		else
+		{
+			SCUART_DISABLE_INT(SC0, SC_INTEN_TBEIEN_Msk);//关发送中断
 		}
 	}
 	
@@ -124,15 +128,11 @@ uint8_t _uart6_send(UART6_DATA *pt_tx , UART6_DATA** pt_rx, CARD_RECV_CALLBACK c
 	}
 
 	tx->size = 0;//发送计数清0
-	rx->size = 0;//接收计数清0
+	rx.size = 0;//接收计数清0
 
 //	while(!SCUART_GET_TX_EMPTY(SC0));
-	SCUART_Write(SC0, (uint8_t*)tx->buf, tx->len);
-
-	//@@下面顺序不要乱，否则可能发送丢失第一个字节
-//	USART_ClearITPendingBit(USART1, USART_IT_TXE);
-//	USART_SendData(USART1, tx->buf[tx->size++]);//开始发送
-//	USART_ITConfig(USART1, USART_IT_TXE, ENABLE);//开发送空中断
+	SCUART_ENABLE_INT(SC0, SC_INTEN_TBEIEN_Msk);//开发送缓存空中断
+	SCUART_WRITE(SC0, tx->buf[tx->size++]);
 	
 	return TRUE;
 }

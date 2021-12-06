@@ -147,9 +147,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>293</LineNumber>
+          <LineNumber>286</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>1212</Address>
+          <Address>1100</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -158,9 +158,16 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>..\main.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\m482sida_main\../main.c\293</Expression>
+          <Expression>\\m482sida_main\../main.c\286</Expression>
         </Bp>
       </Breakpoint>
+      <WatchWindow2>
+        <Ww>
+          <count>0</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>ccl</ItemText>
+        </Ww>
+      </WatchWindow2>
       <Tracepoint>
         <THDelay>0</THDelay>
       </Tracepoint>

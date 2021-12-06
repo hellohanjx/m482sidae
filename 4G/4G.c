@@ -16,7 +16,7 @@
 #include "task.h"
 #include "sys.h"
 #include "4G.h"
-#include "uart6_config.h"
+#include "uart7_config.h"
 #include "msg.h"
 #include "string.h"
 #include "global.h"
@@ -156,7 +156,7 @@ void _4g_config(void)
 @参数：rx，返回数据指针
 @返回值：执行结果
 */
-static uint8_t callback_4g_recv(UART6_DATA *rx)
+static uint8_t callback_4g_recv(UART7_DATA *rx)
 {
 	if(rx->len != 0)
 	{
@@ -205,7 +205,7 @@ static void c4g_power_reset(void)
 */
 static uint8_t c4g_close_cmd_echo(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 	
 	_uart7_send(&rx, (uint8_t*)close_cmd_echo, (sizeof(close_cmd_echo) - 1), callback_4g_recv);//串口发送
@@ -232,7 +232,7 @@ static uint8_t c4g_close_cmd_echo(void)
 */
 static uint8_t c4g_chk_sim(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)chk_pin, (sizeof(chk_pin) - 1), callback_4g_recv);//串口发送
@@ -268,7 +268,7 @@ static uint8_t c4g_chk_sim(void)
 */
 static uint8_t c4g_sim_reg(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)chk_sim_reg, (sizeof(chk_sim_reg) - 1), callback_4g_recv);//串口发送
@@ -321,7 +321,7 @@ static uint8_t c4g_sim_reg(void)
 */
 static uint8_t c4g_net_reg(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)chk_net_reg, (sizeof(chk_net_reg) - 1), callback_4g_recv);//串口发送
@@ -375,7 +375,7 @@ static uint8_t c4g_net_reg(void)
 */
 static uint8_t c4g_chk_point(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)chk_link_point, (sizeof(chk_link_point) - 1), callback_4g_recv);//串口发送
@@ -428,7 +428,7 @@ static uint8_t c4g_chk_point(void)
 */
 static uint8_t c4g_set_point(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	if(c4g_info.Operators == CHINA_MOBILE)
@@ -473,7 +473,7 @@ static uint8_t c4g_set_point(void)
 */
 static uint8_t c4g_chk_context(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)chk_pdp_context, (sizeof(chk_pdp_context) - 1), callback_4g_recv);//串口发送
@@ -524,7 +524,7 @@ static uint8_t c4g_active_context(void)
 	u32 cost_time = 0;
 	#endif
 	
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	#if C_4G_LOG
@@ -574,7 +574,7 @@ static uint8_t c4g_active_context(void)
 */
 static uint8_t c4g_deactive_context(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)deactive_pdp_context, (sizeof(deactive_pdp_context) - 1), callback_4g_recv);//串口发送
@@ -614,7 +614,7 @@ static uint8_t c4g_creat_tcp(void)
 	u32 cost_time = 0;
 	#endif
 	
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err,i;
 	char creat_tcp[55];
 	char port[6];
@@ -676,7 +676,7 @@ static uint8_t c4g_creat_tcp(void)
 */
 static uint8_t c4g_close_tcp(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)close_tcp, (sizeof(close_tcp) - 1), callback_4g_recv);//串口发送
@@ -709,7 +709,7 @@ static uint8_t c4g_close_tcp(void)
 */
 static uint8_t c4g_test_tcp(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)test_tcp, (sizeof(test_tcp) - 1), callback_4g_recv);//串口发送
@@ -738,7 +738,7 @@ static uint8_t c4g_test_tcp(void)
 */
 static uint8_t c4g_chk_tcp(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)chk_tcp, (sizeof(chk_tcp) - 1), callback_4g_recv);//串口发送
@@ -816,7 +816,7 @@ static uint8_t c4g_chk_tcp(void)
 */
 static uint8_t c4g_exit_transpartent(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)exit_transpartent, (sizeof(exit_transpartent) -1), callback_4g_recv);//串口发送
@@ -845,7 +845,7 @@ static uint8_t c4g_exit_transpartent(void)
 //这个其实就是随便发一个字符串（按照命令格式），只要有回复就说明是在“命令模式”
 static uint8_t c4g_exit_transpartent2(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)exit_transpartent2, (sizeof(exit_transpartent2) -1), callback_4g_recv);//串口发送
@@ -870,7 +870,7 @@ static uint8_t c4g_exit_transpartent2(void)
 */
 static uint8_t c4g_enter_transparent(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)enter_transparent_mode, (sizeof(enter_transparent_mode) - 1), callback_4g_recv);//串口发送
@@ -906,7 +906,7 @@ static uint8_t c4g_enter_transparent(void)
 */
 static uint8_t c4g_change_transpartent(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)change_transparent_mode, (sizeof(change_transparent_mode) - 1), callback_4g_recv);//串口发送
@@ -968,7 +968,7 @@ static uint8_t c4g_check_Operators(void)
 	
 	//第一步不成功，进行第二步，根据应答判断运营商
 	{
-		UART6_DATA* rx;
+		UART7_DATA* rx;
 		uint8_t err;
 		
 		_uart7_send(&rx, (uint8_t*)chk_Operators, (sizeof(chk_Operators) - 1), callback_4g_recv);//串口发送
@@ -1013,7 +1013,7 @@ static uint8_t c4g_check_Operators(void)
 */
 static uint8_t c4g_chk_ICCID(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 	uint8_t i;
 
@@ -1049,7 +1049,7 @@ static uint8_t c4g_chk_ICCID(void)
 */
 static uint8_t c4g_chk_quality(void)
 {
-	UART6_DATA* rx;
+	UART7_DATA* rx;
 	uint8_t err;
 
 

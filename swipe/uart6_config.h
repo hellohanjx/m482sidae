@@ -13,10 +13,10 @@ typedef struct UART6_DATA{
 	uint8_t buf[UART6_BUF_SIZE];	//Êý¾Ý»º³åÖ¸Õë
 }UART6_DATA;
 
-typedef void (*CARD_RECV_CALLBACK)(UART6_DATA*);
+typedef void (*UART6_RECV_CALLBACK)(UART6_DATA*);
 
 void uart6_config(void);
-uint8_t _uart6_send(UART6_DATA *pt_tx , UART6_DATA** pt_rx, CARD_RECV_CALLBACK callback); 
+uint8_t _uart6_send(UART6_DATA *pt_tx , UART6_DATA** pt_rx, UART6_RECV_CALLBACK callback); 
 
 
 #endif

@@ -1,14 +1,32 @@
 #ifndef _USER_CONFIG_H_
 #define _USER_CONFIG_H_
 
-#define PACK_MAX_SIZE	255	//与平台通信最大数据长度
 
-#define ICCID_LEN				50	//SIM卡ICCID长度
-#define IP_LEN					16	//ip地址长度
+#define C_4G_LOG	0	//4G日志，1=打开；0=关闭
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+#define PACK_MAX_SIZE						255		//与平台通信最大数据长度
+
+#define ICCID_LEN								50		//SIM卡ICCID长度
+
+#define IP_LEN									16		//ip地址长度
+
+#define PARAM_REDOWNED_CNT			3			//开机参数重复下载次数
+
+#define DEF_HEIM_IP							"116.62.120.86"//"IP.HMILK.CN"//"121.41.30.42"
+#define DEF_HEIM_PORT						8001	//默认端口号
 
 
 

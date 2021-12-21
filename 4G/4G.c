@@ -30,64 +30,64 @@
 #define C4G_RESET_TIME		500	//关机到开机间隔时间（ms）
 
 //AT指令
- const char chk_baud[] = {"AT+IPR?\r\n"};				//查询波特率
- const char set_baud[] = {"AT+IPR=115200\r\n"};		//设置波特率	
- const char close_cmd_echo[] = {"ATE0\r\n"};			//关闭命令回显
- const char save_param[] = {"AT&W\r\n"};				//保存设置参数，应答超时300ms
- const char chk_iccid[] = {"AT+QCCID\r\n"};			//查询ccid
+  char chk_baud[] = {"AT+IPR?\r\n"};				//查询波特率
+  char set_baud[] = {"AT+IPR=115200\r\n"};		//设置波特率	
+  char close_cmd_echo[] = {"ATE0\r\n"};			//关闭命令回显
+  char save_param[] = {"AT&W\r\n"};				//保存设置参数，应答超时300ms
+  char chk_iccid[] = {"AT+QCCID\r\n"};			//查询ccid
 
- const char chk_pin[] = {"AT+CPIN?\r\n"};				//查询sim卡密码(5s超时)
-  const char chk_pin_back1[] = {"+CME ERROR: 10"};	//sim卡未插卡
-  const char chk_pin_back2[] = {"+CPIN: READY"};		//sim卡准备好
+  char chk_pin[] = {"AT+CPIN?\r\n"};				//查询sim卡密码(5s超时)
+static const char chk_pin_ack1[] = {"+CME ERROR: 10"};	//sim卡未插卡
+static const char chk_pin_ack2[] = {"+CPIN: READY"};		//sim卡准备好
 
- const char chk_sim_reg[] = {"AT+CREG?\r\n"};			//查询sim卡是否注册[@查询语音网络注册状态]
- const char chk_net_reg[] = {"AT+CGREG?\r\n"};		//查询net注册[@查询数据网络注册状态]
+  char chk_sim_reg[] = {"AT+CREG?\r\n"};			//查询sim卡是否注册[@查询语音网络注册状态]
+  char chk_net_reg[] = {"AT+CGREG?\r\n"};		//查询net注册[@查询数据网络注册状态]
  
  //运营商APN
- const char set_link_ChinaMobile[] = {"AT+QICSGP=1,1,\"CMNET\",\"\",\"\",1\r\n"};//设置接入点(移动) APN,USERNAME,PASSWORD
- const char set_link_UNICOM[] = {"AT+QICSGP=1,1,\"UNINET\",\"\",\"\",1\r\n"};//设置接入点(联通) APN,USERNAME,PASSWORD
- const char set_link_p[] = {"AT+QICSGP=1,1,\"CTLTE\",\"\",\"\",1\r\n"};//设置接入点(电信) APN,USERNAME,PASSWORD
+  char set_link_ChinaMobile[] = {"AT+QICSGP=1,1,\"CMNET\",\"\",\"\",1\r\n"};//设置接入点(移动) APN,USERNAME,PASSWORD
+  char set_link_UNICOM[] = {"AT+QICSGP=1,1,\"UNINET\",\"\",\"\",1\r\n"};//设置接入点(联通) APN,USERNAME,PASSWORD
+  char set_link_p[] = {"AT+QICSGP=1,1,\"CTLTE\",\"\",\"\",1\r\n"};//设置接入点(电信) APN,USERNAME,PASSWORD
  
- const char chk_link_point[] = {"AT+QICSGP=1\r\n"};	//查询接入点 
- const char active_pdp_context[] = {"AT+QIACT=1\r\n"};//激活接入点(150s超时)[@激活PDP网络]
- const char chk_pdp_context[] = {"AT+QIACT?\r\n"};	//查询context,返回当前接入点信息(150s超时)
- const char deactive_pdp_context[] = {"AT+QIDEACT=1\r\n"};//关闭接入点（40s超时）
+  char chk_link_point[] = {"AT+QICSGP=1\r\n"};	//查询接入点 
+  char active_pdp_context[] = {"AT+QIACT=1\r\n"};//激活接入点(150s超时)[@激活PDP网络]
+  char chk_pdp_context[] = {"AT+QIACT?\r\n"};	//查询context,返回当前接入点信息(150s超时)
+  char deactive_pdp_context[] = {"AT+QIDEACT=1\r\n"};//关闭接入点（40s超时）
 // const char creat_tcp[] = {"AT+QIOPEN=1,0,\"TCP\",\"120.55.115.113\",5008,0,2\r\n"};//创建TCP连接（150s）
 //  const char creat_tcp[] = {"AT+QIOPEN=1,0,\"TCP\",\"120.26.204.86\",8001,0,2\r\n"};//创建TCP连接（150s）
  
-const char test_tcp[] = {"AT+QIOPEN?\r\n"};		//测试TCP连接命令
-const char creat_tcp_top[] = {"AT+QIOPEN=1,0,\"TCP\",\""};
-const char creat_tcp_tail[] = {"\","};//创建TCP连接（150s）
-const char creat_tcp_port[] = {",0,2\r\n"};//服务端端口号+传输模式【透传模式】
-	 const char creat_tcp_back1[] = {"CONNECT"};//创建TCP成功
+ char test_tcp[] = {"AT+QIOPEN?\r\n"};		//测试TCP连接命令
+ char creat_tcp_top[] = {"AT+QIOPEN=1,0,\"TCP\",\""};
+ char creat_tcp_tail[] = {"\","};//创建TCP连接（150s）
+ char creat_tcp_port[] = {",0,2\r\n"};//服务端端口号+传输模式【透传模式】
+static const char creat_tcp_ack[] = {"CONNECT"};//创建TCP成功
 	
- const char close_tcp[] = {"AT+QICLOSE=0\r\n"};		//关闭TCP连接（这个可以自己设置超时）
- const char chk_tcp[] = {"AT+QISTATE=1,0\r\n"};		//查询TCP连接
- const char chk_data_echo[] = {"AT+QISDE?\r\n"};		//查询数据回显
-//const char close_data_echo[] = {"AT+QISDE=0\r\n"};	//关闭数据回显（透传模式不需要）
- const char chk_err_code[] = {"AT+QIGETERROR\r\n"};	//查询最近的错误码
+  char close_tcp[] = {"AT+QICLOSE=0\r\n"};		//关闭TCP连接（这个可以自己设置超时）
+  char chk_tcp[] = {"AT+QISTATE=1,0\r\n"};		//查询TCP连接
+  char chk_data_echo[] = {"AT+QISDE?\r\n"};		//查询数据回显
+// char close_data_echo[] = {"AT+QISDE=0\r\n"};	//关闭数据回显（透传模式不需要）
+  char chk_err_code[] = {"AT+QIGETERROR\r\n"};	//查询最近的错误码
 
- const char exit_transpartent[] = {"+++"};		//退出透传模式
- const char exit_transpartent2[] = {"++++++++\r\n"};		//命令模式下的+++测试
+  char exit_transpartent[] = {"+++"};		//退出透传模式
+  char exit_transpartent2[] = {"++++++++\r\n"};		//命令模式下的+++测试
 
- const char change_transparent_mode[] = {"AT+QISWTMD=1,2\r\n"};		//改为透传模式
- const char enter_transparent_mode[] = {"ATO\r\n"};		//进入透传模式
+  char change_transparent_mode[] = {"AT+QISWTMD=1,2\r\n"};		//改为透传模式
+  char enter_transparent_mode[] = {"ATO\r\n"};		//进入透传模式
 
-  const char common_back[] = {"OK"};	//通用回复"OK"
+static const char common_ack[] = {"OK"};	//通用回复"OK"
 
-  const char chk_Operators[] = {"AT+COPS?\r\n"};//查是什么卡，移动联通电信
-	const char Operators_ChinaMobile[] = {"CHINA MOBILE"};//中国移动
-	const char Operators_ChinaUnicom[] = {"CHN-UNICOM"};//中国联通
-	const char Operators_ChinaTelecom[] = {"CHN-CT"};//中国电信
-//	const char Operators_ChinaMobile[] = {"china mobile"};//中国移动
-//	const char Operators_ChinaUnicom[] = {"chn-unicom"};//中国联通
-//	const char Operators_ChinaTelecom[] = {"chn-ct"};//中国电信
+   char chk_Operators[] = {"AT+COPS?\r\n"};//查是什么卡，移动联通电信
+static const char Operators_ChinaMobile_ack[] = {"CHINA MOBILE"};	//中国移动
+static const char Operators_ChinaUnicom_ack[] = {"CHN-UNICOM"};		//中国联通
+static const char Operators_ChinaTelecom_ack[] = {"CHN-CT"};			//中国电信
+//	 char Operators_ChinaMobile_ack[] = {"china mobile"};//中国移动
+//	 char Operators_ChinaUnicom_ack[] = {"chn-unicom"};//中国联通
+//	 char Operators_ChinaTelecom_ack[] = {"chn-ct"};//中国电信
 
-const char chk_ICCID[] = {"AT+QCCID\r\n"};//查询sim卡ICCID	
-	const char chk_ICCID_ack[] = {"+QCCID:"};//ICCID返回
+ char chk_ICCID[] = {"AT+QCCID\r\n"};//查询sim卡ICCID	
+static const char chk_ICCID_ack[] = {"+QCCID:"};//ICCID返回
 		
-const char chk_signal[] = {"AT+CSQ\r\n"};//查询信号强度
-	const char chk_signal_ack[] = {"+CSQ:"};//查询信号强度返回
+ char chk_signal[] = {"AT+CSQ\r\n"};//查询信号强度
+static const char chk_signal_ack[] = {"+CSQ:"};//查询信号强度返回
 
 //运营商ICCID前6位识别号
 #define OPERATORS_LEN		6//运营商识别码长度
@@ -96,9 +96,9 @@ const char chk_signal[] = {"AT+CSQ\r\n"};//查询信号强度
 #define CHINA_TELECOM_ID_NUM		2		//识别码个数
 enum{ CHINA_MOBILE = 1, CHINA_UNICOM, CHINA_TELECOM };//运营商
 
-const char Operators_ChinaMobile_ID[CHINA_MOBILE_ID_NUM][OPERATORS_LEN] = {"898600", "898602", "898604", "898607"};//中国移动
-const char Operators_ChinaUnicom_ID[CHINA_UINCOM_ID_NUM][OPERATORS_LEN] = {"898601", "898606", "898609"};//中国联通
-const char Operators_ChinaTelecom_ID[CHINA_TELECOM_ID_NUM][OPERATORS_LEN] = {"898603", "898611"};//中国电信
+ char Operators_ChinaMobile_ID[CHINA_MOBILE_ID_NUM][OPERATORS_LEN] = {"898600", "898602", "898604", "898607"};//中国移动
+ char Operators_ChinaUnicom_ID[CHINA_UINCOM_ID_NUM][OPERATORS_LEN] = {"898601", "898606", "898609"};//中国联通
+ char Operators_ChinaTelecom_ID[CHINA_TELECOM_ID_NUM][OPERATORS_LEN] = {"898603", "898611"};//中国电信
 
 /*
 @说明：信号强度参数
@@ -139,7 +139,7 @@ enum
 };
 
 //定义4g数据结构体
-static C4G_INFO c4g_info;
+ C4G_INFO c4g_info;
 
 /*
 @功能：EC20开机引脚初始化--PA15
@@ -185,6 +185,9 @@ static void c4g_power_off(void)
 	C4G_PWR = 1;	//拉高
 	vTaskDelay(C4G_POWEROFF_TIME);
 	C4G_PWR = 0;	//拉低
+	#if C_4G_LOG
+	printf("4g start power down\r\n");
+	#endif
 	vTaskDelay(39*ONE_SECOND);//关机需耗时35s
 }
 
@@ -213,7 +216,7 @@ static uint8_t c4g_close_cmd_echo(void)
 	if(err == pdTRUE)
 	{
 		//返回“OK”
-		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_back, sizeof(common_back) - 1) )//从倒数第3个字符开始比较,
+		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从倒数第3个字符开始比较,
 		{
 			return TRUE;
 		}
@@ -239,12 +242,12 @@ static uint8_t c4g_chk_sim(void)
 	err = c4g_recv_get(5000);//等待超时 5s
 	if(err == pdTRUE)
 	{
-		if( !strncasecmp((char*)&(rx->buf[2]), chk_pin_back2, sizeof(chk_pin_back2) - 1) )//从第3个字符开始比较,
+		if( !strncasecmp((char*)&(rx->buf[2]), chk_pin_ack2, sizeof(chk_pin_ack2) - 1) )//从第3个字符开始比较,
 		{
 			return TRUE;//返回为 "+CPIN: READY "表示sim卡准备好了
 		}
 
-		if( !strncasecmp((char*)&(rx->buf[2]), chk_pin_back1, sizeof(chk_pin_back1) - 1) )//从第3个字符开始比较
+		if( !strncasecmp((char*)&(rx->buf[2]), chk_pin_ack1, sizeof(chk_pin_ack1) - 1) )//从第3个字符开始比较
 		{
 			#if C_4G_LOG
 			printf("4g_err: no sim\r\n\r\n");
@@ -275,7 +278,7 @@ static uint8_t c4g_sim_reg(void)
 	err = c4g_recv_get(300);//等待超时
 	if(err == pdTRUE)
 	{
-		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_back, sizeof(common_back) - 1) )//从倒数第3个字符开始比较,
+		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从倒数第3个字符开始比较,
 		{
 			//处理接收数据
 			uint8_t i, j;
@@ -328,7 +331,7 @@ static uint8_t c4g_net_reg(void)
 	err = c4g_recv_get(300);//等待超时
 	if(err == pdTRUE)
 	{
-		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_back, sizeof(common_back) - 1) )//从第3个字符开始比较,
+		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
 		{
 			//处理接收数据
 			uint8_t i, j;
@@ -382,7 +385,7 @@ static uint8_t c4g_chk_point(void)
 	err = c4g_recv_get(300);//等待超时
 	if(err == pdTRUE)
 	{
-		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_back, sizeof(common_back) - 1) )//比较最后的"OK"
+		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//比较最后的"OK"
 		{
 			//处理接收数据
 			uint8_t i, j;
@@ -445,7 +448,7 @@ static uint8_t c4g_set_point(void)
 	err = c4g_recv_get(300);//等待超时
 	if(err == pdTRUE)
 	{
-		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_back, sizeof(common_back) - 1) )//从第3个字符开始比较,
+		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
 		{
 			return TRUE;//设置接入点成功
 		}
@@ -480,7 +483,7 @@ static uint8_t c4g_chk_context(void)
 	err = c4g_recv_get(15000);//等待超时15s
 	if(err == pdTRUE)
 	{
-		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_back, sizeof(common_back) - 1) )//从第3个字符开始比较,
+		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
 		{
 			//处理接收数据
 			uint8_t i, j;
@@ -521,7 +524,7 @@ static uint8_t c4g_chk_context(void)
 static uint8_t c4g_active_context(void)
 {
 	#if C_4G_LOG
-	u32 cost_time = 0;
+	uint32_t cost_time = 0;
 	#endif
 	
 	UART7_DATA* rx;
@@ -541,12 +544,12 @@ static uint8_t c4g_active_context(void)
 		printf(tmp);
 		printf("\r\n\r\n");
 		#endif
-		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_back, sizeof(common_back) - 1) )//从第3个字符开始比较,
+		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
 		{
 			return TRUE;//激活成功
 		}
 		else
-		if(!strncasecmp((char*)&(rx->buf[2]), common_back, sizeof(common_back) - 1) )
+		if(!strncasecmp((char*)&(rx->buf[2]), common_ack, sizeof(common_ack) - 1) )
 		{
 			return TRUE;//@新版的4G多了这个东西，"+QDMURC"，字符串
 		}
@@ -581,7 +584,7 @@ static uint8_t c4g_deactive_context(void)
 	err = c4g_recv_get(40000);//等待超时40s
 	if(err == pdTRUE)
 	{
-		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_back, sizeof(common_back) - 1) )//从第3个字符开始比较,
+		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
 		{
 			return TRUE;//激活成功
 		}
@@ -611,7 +614,7 @@ static uint8_t c4g_deactive_context(void)
 static uint8_t c4g_creat_tcp(void)
 {
 	#if C_4G_LOG
-	u32 cost_time = 0;
+	uint32_t cost_time = 0;
 	#endif
 	
 	UART7_DATA* rx;
@@ -647,7 +650,8 @@ static uint8_t c4g_creat_tcp(void)
 		printf(tmp);
 		printf("\r\n\r\n");
 		#endif
-		if( !strncasecmp((char*)&(rx->buf[2]), creat_tcp_back1, sizeof(creat_tcp_back1) - 1) )//从第3个字符开始比较,
+		
+		if( !strncasecmp((char*)&(rx->buf[2]), creat_tcp_ack, sizeof(creat_tcp_ack) - 1) )//从第3个字符开始比较,
 		{
 			return TRUE;//激活成功
 		}
@@ -683,7 +687,7 @@ static uint8_t c4g_close_tcp(void)
 	err = c4g_recv_get(10000);//等待超时10s
 	if(err == pdTRUE)
 	{
-		if( !strncasecmp((char*)&(rx->buf[2]), common_back, sizeof(common_back) - 1) )//从第3个字符开始比较,
+		if( !strncasecmp((char*)&(rx->buf[2]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
 		{
 			return TRUE;//关闭成功
 		}
@@ -716,7 +720,7 @@ static uint8_t c4g_test_tcp(void)
 	err = c4g_recv_get(300);//等待超时300ms
 	if(err == pdTRUE)
 	{
-		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_back, sizeof(common_back) - 1) )//从第3个字符开始比较
+		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较
 		{
 			return TRUE;
 		}
@@ -745,7 +749,7 @@ static uint8_t c4g_chk_tcp(void)
 	err = c4g_recv_get(15000);//等待超时15s
 	if(err == pdTRUE)
 	{
-		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_back, sizeof(common_back) - 1) )//从第3个字符开始比较,
+		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
 		{
 			if(rx->len > 6)//如果TCP连接存在，会返回很多数据
 			{
@@ -823,7 +827,7 @@ static uint8_t c4g_exit_transpartent(void)
 	err = c4g_recv_get(1000);//等待超时
 	if(err == pdTRUE)
 	{
-		if( !strncasecmp((char*)&(rx->buf[2]), common_back, sizeof(common_back) - 1) )//从第3个字符开始比较,
+		if( !strncasecmp((char*)&(rx->buf[2]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
 		{
 			return TRUE;//激活成功
 		}
@@ -877,7 +881,7 @@ static uint8_t c4g_enter_transparent(void)
 	err = c4g_recv_get(10000);//等待超时10s
 	if(err == pdTRUE)
 	{
-		if( !strncasecmp((char*)&(rx->buf[2]), creat_tcp_back1, sizeof(creat_tcp_back1) - 1) )//从第3个字符开始比较,
+		if( !strncasecmp((char*)&(rx->buf[2]), creat_tcp_ack, sizeof(creat_tcp_ack) - 1) )//从第3个字符开始比较,
 		{
 			return TRUE;//关闭成功
 		}
@@ -913,7 +917,7 @@ static uint8_t c4g_change_transpartent(void)
 	err = c4g_recv_get(300);//等待超时
 	if(err == pdTRUE)
 	{
-		if( !strncasecmp((char*)&(rx->buf[2]), creat_tcp_back1, sizeof(creat_tcp_back1) - 1) )//从第3个字符开始比较,
+		if( !strncasecmp((char*)&(rx->buf[2]), creat_tcp_ack, sizeof(creat_tcp_ack) - 1) )//从第3个字符开始比较,
 		{
 			return TRUE;//已进入透传模式
 		}
@@ -975,23 +979,23 @@ static uint8_t c4g_check_Operators(void)
 		err = c4g_recv_get(3000);//1.8s超时
 		if(err == pdTRUE)
 		{
-			if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_back, sizeof(common_back) - 1) )//比较最后的"OK"
+			if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//比较最后的"OK"
 			{
 	//			printf((char*)&rx->buf[14]);
 	//			printf("\r\n\r\n\r\n");
 				//从第14字节开始比较运营商名称
 	//			strupr(&rx->buf[rx->len-4]);
-				if( !strncasecmp((char*)&(rx->buf[14]), Operators_ChinaMobile, sizeof(Operators_ChinaMobile) - 1) )//与中国移动比较
+				if( !strncasecmp((char*)&(rx->buf[14]), Operators_ChinaMobile_ack, sizeof(Operators_ChinaMobile_ack) - 1) )//与中国移动比较
 				{
 					c4g_info.Operators = CHINA_MOBILE;//移动
 					return TRUE;
 				}
-				if( !strncasecmp((char*)&(rx->buf[14]), Operators_ChinaUnicom, sizeof(Operators_ChinaUnicom) - 1) )//与中国联通比较
+				if( !strncasecmp((char*)&(rx->buf[14]), Operators_ChinaUnicom_ack, sizeof(Operators_ChinaUnicom_ack) - 1) )//与中国联通比较
 				{
 					c4g_info.Operators = CHINA_UNICOM;//联通
 					return TRUE;
 				}
-				if( !strncasecmp((char*)&(rx->buf[14]), Operators_ChinaTelecom, sizeof(Operators_ChinaTelecom) - 1) )//与中国电信比较
+				if( !strncasecmp((char*)&(rx->buf[14]), Operators_ChinaTelecom_ack, sizeof(Operators_ChinaTelecom_ack) - 1) )//与中国电信比较
 				{
 					c4g_info.Operators = CHINA_TELECOM;//电信
 					return TRUE;
@@ -1023,7 +1027,7 @@ static uint8_t c4g_chk_ICCID(void)
 	{
 		if( !strncasecmp((char*)&(rx->buf[2]), chk_ICCID_ack, sizeof(chk_ICCID_ack) - 1) )//从第3个字符开始比较,
 		{
-			if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_back, sizeof(common_back) - 1) )//判断结尾是否为"OK"
+			if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//判断结尾是否为"OK"
 			{
 				for(i = 0; i < ICCID_LEN - 1 && rx->buf[10+i] != 0x0D; i++)//到0x0D截止
 					class_global.net.arr_ICCID[i] = rx->buf[10+i];
@@ -1059,7 +1063,7 @@ static uint8_t c4g_chk_quality(void)
 	{
 		if( !strncasecmp((char*)&(rx->buf[2]), chk_signal_ack, sizeof(chk_signal_ack) - 1) )//从第3个字符开始比较
 		{
-			if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_back, sizeof(common_back) - 1) )//判断结尾是否为"OK"
+			if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//判断结尾是否为"OK"
 			{
 				char i, j, rssi[10] = {0}, ber[10] = {0};
 				for(i = 7, j = 0; (i < rx->len) && (rx->buf[i] != ',') ;i++)
@@ -1106,6 +1110,7 @@ static uint8_t c4g_chk_quality(void)
 /*
 @功能：4G主任务
 */
+uint32_t time;
 void main_task_4g(void)
 {
 	uint8_t rs;
@@ -1119,7 +1124,8 @@ void main_task_4g(void)
 	}
 
 	c4g_info.fsm = ST_EXIT_TRANSPARTENT;//每次模块启动从退出透传开始
-	
+	time = ONE_SECOND;
+	vTaskDelay(3*ONE_SECOND);
 	while(1)
 	{
 		//失联计时

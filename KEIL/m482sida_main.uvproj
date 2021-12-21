@@ -362,7 +362,7 @@
             <wLevel>0</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
-            <uC99>0</uC99>
+            <uC99>1</uC99>
             <uGnu>0</uGnu>
             <useXO>0</useXO>
             <v6Lang>1</v6Lang>
@@ -376,7 +376,7 @@
               <MiscControls></MiscControls>
               <Define>RVDS_ARMCM4_NUC4xx</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Device\Nuvoton\M480\Include;..\Device\Nuvoton\M480\Source\ARM;..\Device\Nuvoton\M480\Source\GCC;..\Device\Nuvoton\M480\Source\IAR;..\Device;..\Device\Nuvoton;..\Device\Nuvoton\M480;..\FreeRTOS\Source\include;..\FreeRTOS;..\..\m482sidae;..\StdDriver\src;..\StdDriver\inc;..\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\FreeRTOS\Demo\Common\include;..\hardware;..\4G;..\swipe;..\global</IncludePath>
+              <IncludePath>..\Device\Nuvoton\M480\Include;..\Device\Nuvoton\M480\Source\ARM;..\Device\Nuvoton\M480\Source\GCC;..\Device\Nuvoton\M480\Source\IAR;..\Device;..\Device\Nuvoton;..\Device\Nuvoton\M480;..\FreeRTOS\Source\include;..\FreeRTOS;..\..\m482sidae;..\StdDriver\src;..\StdDriver\inc;..\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\FreeRTOS\Demo\Common\include;..\hardware;..\4G;..\swipe;..\global;..\rtc;..\adc;..\control</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -441,11 +441,6 @@
               <FilePath>..\main.c</FilePath>
             </File>
             <File>
-              <FileName>ParTest.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ParTest.c</FilePath>
-            </File>
-            <File>
               <FileName>QueueSet.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\FreeRTOS\Demo\Common\Minimal\QueueSet.c</FilePath>
@@ -496,6 +491,11 @@
           <GroupName>lib</GroupName>
           <Files>
             <File>
+              <FileName>rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\StdDriver\src\rtc.c</FilePath>
+            </File>
+            <File>
               <FileName>clk.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\StdDriver\src\clk.c</FilePath>
@@ -530,6 +530,21 @@
               <FileType>1</FileType>
               <FilePath>..\StdDriver\src\pdma.c</FilePath>
             </File>
+            <File>
+              <FileName>sc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\StdDriver\src\sc.c</FilePath>
+            </File>
+            <File>
+              <FileName>eadc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\StdDriver\src\eadc.c</FilePath>
+            </File>
+            <File>
+              <FileName>epwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\StdDriver\src\epwm.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -555,6 +570,16 @@
               <FileType>1</FileType>
               <FilePath>..\hardware\tap_set.c</FilePath>
             </File>
+            <File>
+              <FileName>sys_clock.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\hardware\sys_clock.c</FilePath>
+            </File>
+            <File>
+              <FileName>dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\hardware\dma.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -569,6 +594,21 @@
               <FileName>4G.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\4G\4G.c</FilePath>
+            </File>
+            <File>
+              <FileName>commucation.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\4G\commucation.c</FilePath>
+            </File>
+            <File>
+              <FileName>pack_load.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\4G\pack_load.c</FilePath>
+            </File>
+            <File>
+              <FileName>pack_temp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\4G\pack_temp.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -619,6 +659,41 @@
               <FileName>global.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\global\global.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>rtc</GroupName>
+          <Files>
+            <File>
+              <FileName>user_rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\rtc\user_rtc.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>adc</GroupName>
+          <Files>
+            <File>
+              <FileName>adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\adc\adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>temp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\adc\temp.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>control</GroupName>
+          <Files>
+            <File>
+              <FileName>epwm_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\control\epwm_driver.c</FilePath>
             </File>
           </Files>
         </Group>

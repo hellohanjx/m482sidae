@@ -112,24 +112,24 @@ uint32_t SCUART_Open(SC_T* sc, uint32_t u32baudrate)
     /* Calculate divider for target baudrate */
     u32Div = (u32Clk + (u32baudrate >> 1) - 1UL) / u32baudrate - 1UL;
 
-//    /* Enable smartcard interface and stop bit = 1 */
-//    sc->CTL = SC_CTL_SCEN_Msk | SC_CTL_NSB_Msk;
-//    /* Enable UART mode, disable parity and 8 bit per character */
-//    sc->UARTCTL = SCUART_CHAR_LEN_8 | SCUART_PARITY_NONE | SC_UARTCTL_UARTEN_Msk;
-//    sc->ETUCTL = u32Div;
+    /* Enable smartcard interface and stop bit = 1 */
+    sc->CTL = SC_CTL_SCEN_Msk | SC_CTL_NSB_Msk;
+    /* Enable UART mode, disable parity and 8 bit per character */
+    sc->UARTCTL = SCUART_CHAR_LEN_8 | SCUART_PARITY_NONE | SC_UARTCTL_UARTEN_Msk;
+    sc->ETUCTL = u32Div;
 
-	
- sc->CTL |= SC_CTL_SCEN_Msk;//SCEN置1，才能写其他SC寄存器
- sc->UARTCTL |= SC_UARTCTL_UARTEN_Msk;//1-进入uart模式
- while((sc->ACTCTL & SC_CTL_SYNC_Msk) >> 31);//等待同步完成
- sc->ALTCTL |= (SC_ALTCTL_TXRST_Msk | SC_ALTCTL_RXRST_Msk);//2-rx与tx复位
- sc->CTL &= ~(SC_CTL_CONSEL_Msk | SC_CTL_AUTOCEN_Msk);//3-consel 与 autocen 置0
- sc->ETUCTL = u32Div;//4-波特率
- sc->UARTCTL &= ~SC_UARTCTL_WLS_Msk;//字符长度8位
- sc->UARTCTL |= SC_UARTCTL_PBOFF_Msk;//关闭校验
- sc->CTL |= SC_CTL_NSB_Msk;//停止位的长度是1ETU
- sc->CTL &= ~SC_CTL_RXTRGLV_Msk;//RX缓存出发水平为1字节
- sc->RXTOUT &= ~SC_RXTOUT_RFTM_Msk;//关闭 SC接收FIFO超时寄存器//	
+//测试用来着
+// sc->CTL |= SC_CTL_SCEN_Msk;//SCEN置1，才能写其他SC寄存器
+// sc->UARTCTL |= SC_UARTCTL_UARTEN_Msk;//1-进入uart模式
+// while((sc->ACTCTL & SC_CTL_SYNC_Msk) >> 31);//等待同步完成
+// sc->ALTCTL |= (SC_ALTCTL_TXRST_Msk | SC_ALTCTL_RXRST_Msk);//2-rx与tx复位
+// sc->CTL &= ~(SC_CTL_CONSEL_Msk | SC_CTL_AUTOCEN_Msk);//3-consel 与 autocen 置0
+// sc->ETUCTL = u32Div;//4-波特率
+// sc->UARTCTL &= ~SC_UARTCTL_WLS_Msk;//字符长度8位
+// sc->UARTCTL |= SC_UARTCTL_PBOFF_Msk;//关闭校验
+// sc->CTL |= SC_CTL_NSB_Msk;//停止位的长度是1ETU
+// sc->CTL &= ~SC_CTL_RXTRGLV_Msk;//RX缓存出发水平为1字节
+// sc->RXTOUT &= ~SC_RXTOUT_RFTM_Msk;//关闭 SC接收FIFO超时寄存器//	
 
     return(u32Clk / (u32Div + 1UL));
 }

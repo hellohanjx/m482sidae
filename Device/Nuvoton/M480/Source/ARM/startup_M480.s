@@ -16,7 +16,7 @@
 ; </h>
 
 	IF :LNOT: :DEF: Stack_Size
-Stack_Size      EQU     0x00000800
+Stack_Size      EQU     0x00000800	;"Stack_Size"必须顶头写，不然报错。栈大小，这只是个默认值
 	ENDIF
 
                 AREA    STACK, NOINIT, READWRITE, ALIGN=3

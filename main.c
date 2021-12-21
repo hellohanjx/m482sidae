@@ -1,31 +1,3 @@
-/*
- * FreeRTOS Kernel V10.0.0
- * Copyright (C) 2017 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
- * the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software. If you wish to use our Amazon
- * FreeRTOS name, please do so in a fair use way that does not cause confusion.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * http://www.FreeRTOS.org
- * http://aws.amazon.com/freertos
- *
- * 1 tab == 4 spaces!
- */
-
 #include <stdio.h>
 
 /* Kernel includes. */
@@ -34,7 +6,7 @@
 #include "timers.h"
 #include "semphr.h"
 
-/* Demo application includes. */
+///* Demo application includes. */
 #include "partest.h"
 #include "flash.h"
 #include "flop.h"
@@ -52,131 +24,67 @@
 
 /* Hardware and starter kit includes. */
 #include "NuMicro.h"
-
 #include "hardware.h"
-
-/* Priorities for the demo application tasks. */
-#define mainFLASH_TASK_PRIORITY             ( tskIDLE_PRIORITY + 1UL )
-#define mainQUEUE_POLL_PRIORITY             ( tskIDLE_PRIORITY + 2UL )
-#define mainSEM_TEST_PRIORITY               ( tskIDLE_PRIORITY + 1UL )
-#define mainBLOCK_Q_PRIORITY                ( tskIDLE_PRIORITY + 2UL )
-#define mainCREATOR_TASK_PRIORITY           ( tskIDLE_PRIORITY + 3UL )
-#define mainFLOP_TASK_PRIORITY              ( tskIDLE_PRIORITY )
-#define mainCHECK_TASK_PRIORITY             ( tskIDLE_PRIORITY + 3UL )
-
-#define mainCHECK_TASK_STACK_SIZE           ( configMINIMAL_STACK_SIZE )
-
-/* The time between cycles of the 'check' task. */
-#define mainCHECK_DELAY                     ( ( portTickType ) 5000 / portTICK_RATE_MS )
-
-/* The LED used by the check timer. */
-#define mainCHECK_LED                       ( 3UL )
-
-/* A block time of zero simply means "don't block". */
-#define mainDONT_BLOCK                      ( 0UL )
-
-/* The period after which the check timer will expire, in ms, provided no errors
-have been reported by any of the standard demo tasks.  ms are converted to the
-equivalent in ticks using the portTICK_RATE_MS constant. */
-#define mainCHECK_TIMER_PERIOD_MS           ( 3000UL / portTICK_RATE_MS )
-
-/* The period at which the check timer will expire, in ms, if an error has been
-reported in one of the standard demo tasks.  ms are converted to the equivalent
-in ticks using the portTICK_RATE_MS constant. */
-#define mainERROR_CHECK_TIMER_PERIOD_MS     ( 200UL / portTICK_RATE_MS )
-
-/* Set mainCREATE_SIMPLE_LED_FLASHER_DEMO_ONLY to 1 to create a simple demo.
-Set mainCREATE_SIMPLE_LED_FLASHER_DEMO_ONLY to 0 to create a much more
-comprehensive test application.  See the comments at the top of this file, and
-the documentation page on the http://www.FreeRTOS.org web site for more
-information. */
-#define mainCREATE_SIMPLE_LED_FLASHER_DEMO_ONLY     0
+#include "sys_clock.h"
+#include "msg.h"
+#include "commucation.h"
+#include "global.h"
+#include "user_rtc.h"
+#include "temp.h"
+#include "led_gpio.h"
 
 
 
-
-
+#define START_TASK_PRIO		1			//任务优先级
+#define START_STK_SIZE 		256		//任务堆栈大小
+TaskHandle_t START_Task_Handler;	//任务句柄
+static void start_task( void *pvParameters );
 
 #define COMMUCATION_TASK_PRIO		23		//任务优先级
-#define COMMUCATION_STK_SIZE 		256		//任务堆栈大小
-
-static void register_unlock_set( void );
-
-
+#define COMMUCATION_STK_SIZE 		512		//任务堆栈大小
+TaskHandle_t Commucation_Task_Handler;		//任务句柄
 static void communication_task( void *pvParameters );
+
+#define TEST_TASK_PRIO		10		//任务优先级
+#define TEST_STK_SIZE 		256		//任务堆栈大小
+TaskHandle_t Test_Task_Handler;		//任务句柄
+static void test_task( void *pvParameters );
+
+#define IDLE_TASK_PRIO		15		//任务优先级
+#define IDLE_STK_SIZE 		256		//任务堆栈大小
+TaskHandle_t Idle_Task_Handler;		//任务句柄
 static void idle_task( void *pvParameters );
 
+/*
+@功能：内存测试
+@参数：start,起始地址，stop结束地址
+*/
+	uint8_t n;
+	uint32_t start_s;
 
-
-
+static void memory_test(uint32_t start, uint32_t stop)
+{
+	while(start < stop)
+	{
+		(*(__IO uint8_t *)(start)) = n;
+		start_s = start;
+		start++;
+		n++;
+	}
+}
+/***********************************
+@主循环
+***********************************/
 int main(void)
 {
-    register_unlock_set();
-
-    xTaskCreate( idle_task, "Check", mainCHECK_TASK_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );//创建空闲任务
-	  xTaskCreate( communication_task, "Commucation", COMMUCATION_STK_SIZE, NULL, COMMUCATION_TASK_PRIO, NULL );//创建通信任务
-	
-    vStartPolledQueueTasks( mainQUEUE_POLL_PRIORITY );//创建队列
-    
-		printf("FreeRTOS is starting ...\n");
-    vTaskStartScheduler();
-	
-    for( ;; );//如果运行到这里，有问题
+	NVIC_SetPriorityGrouping(0);
+	sys_clock_init();
+//	memory_test(0x20000000, 0x20027FFF);
+	xTaskCreate( start_task, "start", START_STK_SIZE, NULL, START_TASK_PRIO, &START_Task_Handler );//创建空闲任务
+	vTaskStartScheduler();//开始调度
+	for( ;; );//如果运行到这里，有问题
 }
 
-
-/*
-@功能：配置需要解除锁定的寄存器
-*/
-static void register_unlock_set( void )
-{
-    /* Unlock protected registers */
-    SYS_UnlockReg();
-
-    /* Set XT1_OUT(PF.2) and XT1_IN(PF.3) to input mode */
-//    PF->MODE &= ~(GPIO_MODE_MODE2_Msk | GPIO_MODE_MODE3_Msk);
-
-    /* Enable External XTAL (4~24 MHz) */
-    CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);//使能内部高速晶振
-    CLK_EnableXtalRC(CLK_PWRCTL_LIRCEN_Msk);//使能内部低速晶振
-
-SYS->IRCTCTL |= SYS_IRCTCTL_REFCKSEL_Msk;//12MHz晶振校准	
-//SYS->HIRCTCTL |= SYS_HIRCTCTL_REFCKSEL_Msk;//48MHz晶振校准	
-	
-    /* Waiting for 12MHz clock ready */
-    CLK_WaitClockReady(CLK_STATUS_HIRCSTB_Msk);//等待内部高速晶振准备好
-    CLK_WaitClockReady(CLK_STATUS_LIRCSTB_Msk);//等待内部低速晶振准备好
-
-    /* Set core clock as PLL_CLOCK from PLL */
-    CLK_SetCoreClock(FREQ_192MHZ);
-
-    /* Set both PCLK0 and PCLK1 as HCLK/2 */
-    CLK->PCLKDIV = CLK_PCLKDIV_APB0DIV_DIV2 | CLK_PCLKDIV_APB1DIV_DIV2;
-
-    /* Enable IP clock */
-    CLK_EnableModuleClock(TMR0_MODULE);//使能计时器0时钟
-
-    /* Select IP clock source */
-    CLK_SetModuleClock(TMR0_MODULE, CLK_CLKSEL1_TMR0SEL_HIRC, 0);//选择定时器0时钟源
-
-
-		hardware_config();
-
-    /* Update System Core Clock */
-    /* User can use SystemCoreClockUpdate() to calculate SystemCoreClock. */
-    SystemCoreClockUpdate();
-
-
-//    PH->MODE = (PH->MODE & ~(GPIO_MODE_MODE0_MSK | GPIO_MODE_MODE1_MSK | GPIO_MODE_MODE2_MSK)) |
-//               (GPIO_MODE_OUTPUT << GPIO_MODE_MODE0_POS) |
-//               (GPIO_MODE_OUTPUT << GPIO_MODE_MODE1_POS) |
-//               (GPIO_MODE_OUTPUT << GPIO_MODE_MODE2_POS);  // SET TO OUTPUT MODE
-
-    /* Lock protected registers */
-    SYS_LockReg();
-
-}
-/*-----------------------------------------------------------*/
 
 void vApplicationMallocFailedHook( void )
 {
@@ -191,6 +99,7 @@ void vApplicationMallocFailedHook( void )
     to query the size of free heap space that remains (although it does not
     provide information on how the remaining heap might be fragmented). */
     taskDISABLE_INTERRUPTS();
+		printf("apply memory err\r\n");
     for( ;; );
 }
 /*-----------------------------------------------------------*/
@@ -218,6 +127,7 @@ void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName 
     configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook
     function is called if a stack overflow is detected. */
     taskDISABLE_INTERRUPTS();
+		printf("vApplicationStackOverflowHook\r\n");
     for( ;; );
 }
 /*-----------------------------------------------------------*/
@@ -236,9 +146,32 @@ void vApplicationTickHook( void )
         vQueueSetAccessQueueSetFromISR();
     }
 #endif /* mainCREATE_SIMPLE_BLINKY_DEMO_ONLY */
+
 }
 
 
+/*******************************************************************
+@起始任务
+*******************************************************************/
+static void start_task( void *pvParameters )
+{
+	global_init();
+	msg_init();
+	hardware_config();//外设配置
+	rtc_config();
+	
+	taskENTER_CRITICAL();//进入临界区
+
+	xTaskCreate( idle_task, 					"idle", 				IDLE_STK_SIZE, 					NULL, 	IDLE_TASK_PRIO, 					&Idle_Task_Handler );//创建空闲任务
+	xTaskCreate( communication_task, 	"Commucation", 	COMMUCATION_STK_SIZE, 	NULL, 	COMMUCATION_TASK_PRIO, 		&Commucation_Task_Handler );//创建通信任务
+	xTaskCreate( test_task, 					"test", 				TEST_STK_SIZE, 					NULL, 	TEST_TASK_PRIO, 					&Test_Task_Handler );//创建测试任务
+
+//	vStartPolledQueueTasks( mainQUEUE_POLL_PRIORITY );//创建队列
+	printf("FreeRTOS is starting ...\n");
+	
+	vTaskDelete(START_Task_Handler); //删除开始任务
+	taskEXIT_CRITICAL();            //退出临界区
+}
 
 /*******************************************************************
 @空闲任务
@@ -247,23 +180,40 @@ static void idle_task( void *pvParameters )
 {
 	uint8_t state = FALSE;
 	portTickType xLastExecutionTime;
-	
+	char show_buf[500];
+	uint32_t temp_time = 0;
 	xLastExecutionTime = xTaskGetTickCount();
-	printf("Check Task is running ...\n");
 
 	for( ;; )
 	{
+		#if(0)
+		vTaskList(show_buf);
+		printf("任务名      任务状态 优先级 剩余栈 任务序号\r\n");
+		printf("%s\r\n", show_buf);
+		printf("\r\n");
+		#endif
+		
+		if(class_global.net.state == 1)
+		{
+			LED_NET = 0;
+		}
+		
 		LED_BREATH = state;
-		LED_NET = !state;
 		state = !state;
+		
+		if( (temp_time == 0) || (xTaskGetTickCount() - temp_time > ONE_SECOND*600) )//10分钟传送一条温度信息
+		{
+			instant_equipment_state(TYPE_TEMP, class_global.temp.external.state, class_global.temp.external.val);//汇报温度
+			temp_time = xTaskGetTickCount();
+		}
 		
 		/* Perform this check every mainCHECK_DELAY milliseconds. */
 		vTaskDelayUntil( &xLastExecutionTime, 1000 );//绝对延时函数，每隔一段时间执行一次
 		
-		if( xArePollingQueuesStillRunning() != pdTRUE )//检测所有任务是否运行正常
-		{
-			printf( "ERROR IN POLL Q\n" );
-		}
+//		if( xArePollingQueuesStillRunning() != pdTRUE )//检测所有任务是否运行正常
+//		{
+//			printf( "ERROR IN POLL Q\n" );
+//		}
 	}
 }
 
@@ -271,34 +221,105 @@ static void idle_task( void *pvParameters )
 /*******************************************************************
 @通信任务
 *******************************************************************/
-#include "uart6_config.h"
-
 static void communication_task( void *pvParameters )
 {
-	uint8_t tmp[6], count = 0, len, ccl = 0;
-	pvParameters = pvParameters;
-	
+	main_task_commucation();
+}
+
+
+/*******************************************************************
+@测试任务
+*******************************************************************/
+#include "uart1_config.h"
+#include "uart2_config.h"
+#include "uart3_config.h"
+#include "uart4_config.h"
+#include "uart5_config.h"
+#include "uart6_config.h"
+
+
+	UART1_DATA tx1, *rx1;
+	UART6_DATA tx6, *rx6;
+	UART2_DATA tx2, *rx2;
+	UART3_DATA tx3, *rx3;
+	UART4_DATA tx4, *rx4;
+	UART5_DATA tx5, *rx5;
+
+static void test_task( void *pvParameters )
+{
+	char tmp[10];
+	CUR_TIME time;
 	for(;;)
 	{
-		for(; ccl < 10; ccl++)
-		{
-			UART6_DATA tx, *rx;
-			len = sprintf((char*)tmp, "%u", count++);
-			tmp[len] = 0;
-			
-			tx.len = 0;
-			tx.buf[tx.len++] = 'S';
-			tx.buf[tx.len++] = 'C';
-			tx.buf[tx.len++] = '0';
-			tx.buf[tx.len++] = '\r';
-			tx.buf[tx.len++] = '\n';
-			_uart6_send(&tx, &rx, 0);
-			vTaskDelay(1);
-		}
-//		SCUART_Write(SC0, tmp, len);
-//		SCUART_Write(SC0, "\r\n", sizeof("\r\n"));
+		uint8_t n;
+
+		tx1.len = 0;
+		tx6.len = 0;
+		tx2.len = 0;
+		tx3.len = 0;
+		tx4.len = 0;
+		tx5.len = 0;
 		
-		vTaskDelay(2000);
+		for(n = 0; n < 26; n++)
+		{
+			tx1.buf[tx1.len++] = 'a'+n;
+			tx6.buf[tx6.len++] = 'a'+n;
+			tx2.buf[tx2.len++] = 'a'+n;
+			tx3.buf[tx3.len++] = 'a'+n;
+			tx4.buf[tx4.len++] = 'a'+n;
+			tx5.buf[tx5.len++] = 'a'+n;
+		}
+		
+		_uart1_send(&tx1, &rx1, 0);
+		_uart6_send(&tx6, &rx6, 0);
+		_uart2_send(&tx2, &rx2, 0);
+		_uart3_send(&tx3, &rx3, 0);
+		_uart4_send(&tx4, &rx4, 0);
+		_uart5_send(&tx5, &rx5, 0);
+
+		time = get_cur_time();
+		
+		tmp[sprintf(tmp, "%u", time.year)] = 0;
+		printf(tmp);
+		printf("-");
+		tmp[sprintf(tmp, "%u", time.month)] = 0;
+		printf(tmp);
+		printf("-");
+		tmp[sprintf(tmp, "%u", time.day)] = 0;
+		printf(tmp);
+		printf(" ");
+		tmp[sprintf(tmp, "%u", time.hour)] = 0;
+		printf(tmp);
+		printf(":");
+		tmp[sprintf(tmp, "%u", time.min)] = 0;
+		printf(tmp);
+		printf(":");
+		tmp[sprintf(tmp, "%u", time.sec )] = 0;
+		printf(tmp);
+		printf("+");
+		tmp[sprintf(tmp, "%u", time.week )] = 0;
+		printf(tmp);
+		printf("\r\n");
+//		UART_Write(UART1, tx.buf, tx.len);
+		//外部温度
+		get_external_temp((int*)&class_global.temp.external.val, (uint8_t*)&class_global.temp.external.state);
+		printf("external temp = ");
+		tmp[sprintf(tmp, "%d", class_global.temp.external.val )] = 0;
+		printf(tmp);
+		printf("\r\n");
+		printf("external temp state = ");
+		tmp[sprintf(tmp, "%d", class_global.temp.external.state )] = 0;
+		printf(tmp);
+		printf("\r\n");
+		
+		//内部温度
+		class_global.temp.internal.val = get_internal_temp();
+		printf("internal temp = ");
+		tmp[sprintf(tmp, "%d", class_global.temp.internal.val )] = 0;
+		printf(tmp);
+		printf("\r\n");
+	
+		vTaskDelay(3000);
 	}
 }
 

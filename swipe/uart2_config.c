@@ -1,17 +1,17 @@
-#include "uart2_config.h"
+#include "uart_config.h"
 #include "uart.h"
 #include "pdma.h"
 
 
-static volatile UART2_DATA rx;	//接收指针
-static volatile UART2_DATA *tx;	//发送指针
-static UART2_RECV_CALLBACK callBack_recv;//接收处理回调函数
+static volatile UART_DATA rx;	//接收指针
+static volatile UART_DATA *tx;	//发送指针
+static UART_RECV_CALLBACK callBack_recv;//接收处理回调函数
 
 /*
 @功能：默认回调函数
 @说明：如果没有指定回调函数，则使用默认回调函数
 */
-static void default_callback_recv(UART2_DATA *rx)
+static void default_callback_recv(UART_DATA *rx)
 {
 	UART_Write(UART2, (uint8_t*)"UART2 = ", sizeof("UART2 = "));
 	UART_Write(UART2, rx->buf, rx->len);
@@ -20,7 +20,7 @@ static void default_callback_recv(UART2_DATA *rx)
 /*
 @功能：dma配置
 */
-static void pdma_config(UART2_DATA *rx, UART2_DATA *tx)
+static void pdma_config(UART_DATA *rx, UART_DATA *tx)
 {
 	CLK_EnableModuleClock(PDMA_MODULE);//使能PDMA时钟
 	NVIC_SetPriority(PDMA_IRQn, 0);//中断优先级
@@ -47,7 +47,7 @@ static void pdma_config(UART2_DATA *rx, UART2_DATA *tx)
 /*
 @功能：UART2 配置
 */
-void uart2_config(void)
+void _uart2_config(uint32_t baud)
 {
 	CLK_EnableModuleClock(UART2_MODULE);//使能串口时钟
 	CLK_SetModuleClock(UART2_MODULE, CLK_CLKSEL3_UART2SEL_HIRC, CLK_CLKDIV4_UART2(1));//选择串口时钟源,第1参数串口模块，第2参数时钟源，第3参数分频
@@ -55,7 +55,7 @@ void uart2_config(void)
 	SYS->GPC_MFPL &= ~(SYS_GPC_MFPL_PC4MFP_Msk | SYS_GPC_MFPL_PC5MFP_Msk);//PC4,PC5
 	SYS->GPC_MFPL |= (SYS_GPC_MFPL_PC4MFP_UART2_RXD | SYS_GPC_MFPL_PC5MFP_UART2_TXD);//映射到串口2的RX与TX
 
-	UART_Open(UART2, 115200);
+	UART_Open(UART2, baud);
 	
 	pdma_config(NULL, NULL);
 	
@@ -83,7 +83,7 @@ void UART2_IRQHandler(void)
 		uint8_t n = 0;
 		while(!UART_GET_RX_EMPTY(UART2) && n++ < 13)//这里需要少收一个数据，否则不会进入超时中断
 		{
-			rx.len %= UART2_BUF_SIZE;
+			rx.len %= UART_BUF_SIZE;
 			rx.buf[rx.len++] = UART2->DAT;
 		}
 	}
@@ -92,17 +92,17 @@ void UART2_IRQHandler(void)
 	{
 		while(!UART_GET_RX_EMPTY(UART2))
 		{
-			rx.len %= UART2_BUF_SIZE;
+			rx.len %= UART_BUF_SIZE;
 			rx.buf[rx.len++] = UART2->DAT;
 		}
 		if(callBack_recv != default_callback_recv)
 		{
-			callBack_recv((UART2_DATA*)&rx);//回调处理
+			callBack_recv((UART_DATA*)&rx);//回调处理
 			callBack_recv = default_callback_recv;//防止野指针
 		}
 		else
 		{
-			default_callback_recv((UART2_DATA*)&rx);
+			default_callback_recv((UART_DATA*)&rx);
 		}
 	}
 	
@@ -110,7 +110,7 @@ void UART2_IRQHandler(void)
 	{
 		while(!UART_GET_RX_EMPTY(UART2))
 		{
-			rx.len %= UART2_BUF_SIZE;
+			rx.len %= UART_BUF_SIZE;
 			rx.buf[rx.len++] = UART2->DAT;
 		}
 		UART_Write(UART2, "G", sizeof("G"));
@@ -125,7 +125,7 @@ void UART2_IRQHandler(void)
 @返回值：操作结果
 @注意：如果发送数据很快，这里需要采用信号量锁住发送过程
 */
-uint8_t _uart2_send(UART2_DATA *pt_tx , UART2_DATA** pt_rx, UART2_RECV_CALLBACK callback)
+uint8_t _uart2_send(UART_DATA *pt_tx , UART_DATA** pt_rx, UART_RECV_CALLBACK callback)
 {
 	if(pt_tx == 0)
 		return FALSE;
@@ -133,16 +133,17 @@ uint8_t _uart2_send(UART2_DATA *pt_tx , UART2_DATA** pt_rx, UART2_RECV_CALLBACK 
 	if(callback)
 		callBack_recv = callback;	//回调函数初始化
 	
-	*pt_rx = (UART2_DATA*)&rx;
+	*pt_rx = (UART_DATA*)&rx;
 	rx.len = 0;//接收计数清0
 	tx = pt_tx;
 	tx->size = 0;//发送计数清0
-	tx->len %= UART2_BUF_SIZE;//限制发送长度
+	tx->len %= UART_BUF_SIZE;//限制发送长度
+	rx.id = tx->id;//标记数据来源，刷卡器编号0~5
 	
 	UART_DISABLE_INT(UART2, UART_INTEN_TXPDMAEN_Msk);//禁能dma发送
 	UART_DISABLE_INT(UART2, UART_INTEN_RXPDMAEN_Msk);//禁能dma接收
 		
-	pdma_config(NULL, (UART2_DATA*)tx);
+	pdma_config(NULL, (UART_DATA*)tx);
 
 	UART_ENABLE_INT(UART2, UART_INTEN_TXPDMAEN_Msk);//使能DMA发送,DMA发送
 //	UART_ENABLE_INT(UART2, UART_INTEN_RXPDMAEN_Msk);//使能DMA发送,DMA接收

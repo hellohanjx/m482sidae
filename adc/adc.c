@@ -5,7 +5,7 @@
 @注意：这个驱动里面EADC0 = EADC
 @说明：adc有19个采样模块，0~15每个模块可以连接到不同的通道 EADC_ConfigSampleModule()。16~18连接到固定外设
 */
-void adc_config(void)
+void _adc_config(void)
 {
 	int32_t adc_val[2];
 	//内部温度传感器配置
@@ -36,7 +36,7 @@ void adc_config(void)
 @功能：获取内部温度传感器ADC值
 @返回，adc值
 */
-uint16_t get_internal_senser_adc(void)
+uint16_t _get_internal_senser_adc(void)
 {
 	EADC_START_CONV(EADC, BIT17);									//通道17-内部温度，开始转换
 	while(!EADC_GET_DATA_VALID_FLAG(EADC, BIT17));//等待有效数据转换完成
@@ -48,7 +48,7 @@ uint16_t get_internal_senser_adc(void)
 @功能：获取外部温度传感器ADC值
 @返回，adc值
 */
-uint16_t get_external_senser_adc(void)
+uint16_t _get_external_senser_adc(void)
 {
 	EADC_START_CONV(EADC, BIT8);									//通道8，开始转换
 	while(!EADC_GET_DATA_VALID_FLAG(EADC, BIT8));	//等待有效数据转换完成

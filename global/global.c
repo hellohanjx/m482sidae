@@ -1,7 +1,8 @@
 #include "global.h"
 #include "string.h"
+#include "isp_program.h"
 
-volatile char main_version[] = {"3XXXX-211208"};//版本号
+volatile char main_version[] = {"NuWater-211221A"};//版本号
 
 
 
@@ -72,14 +73,49 @@ uint32_t get_random_number(void)
 */
 void global_init(void)
 {
-	class_global.net.serverPort = 8001;//端口号
-	strcpy((char*)class_global.net.arr_ip, (const char*)DEF_HEIM_IP);//ip
+	char tmp[4];
+	uint32_t i;
+	uint32_t card_type, factory, point_bit, price_bit, price_max;
 	
-	class_global.net.id = 1000000006;//机器id
-	class_global.net.password = 0;//联机密码
+	reset_param_block();
 	
-	class_global.sys.factory_en = 1;//工厂模式
-	class_global.trade.price = 1;//价格
+	class_global.net.id = flash_param_get(FLASH_LIST_Id, FLASH_ADDR_Id);//id
 	
+	//读取IP
+	{
+		uint8_t ip[4];
+		uint32_t ip_long;
+		ip_long = flash_param_get(FLASH_LIST_Ip, FLASH_ADDR_Ip);//ip
+		ip[0] = ip_long >> 24;
+		ip[1] = ip_long >> 16;
+		ip[2] = ip_long >> 8;
+		ip[3] = ip_long & 0xff;
+		
+		for(i = 0; i < IP_LEN; i++)//ip初始化
+			class_global.net.arr_ip[i] = 0;
+		for(i = 0; i < 4; i++)
+		{
+			tmp[sprintf(tmp, "%u", ip[i])] = 0;
+			strcat((char*)class_global.net.arr_ip, tmp);
+			if(i != 3)
+				strcat((char*)class_global.net.arr_ip, (char*)".");
+		}
+	}
+	
+	class_global.net.serverPort = flash_param_get(FLASH_LIST_Port, FLASH_ADDR_Port);//端口号
+	card_type = flash_param_get(FLASH_LIST_CardType, FLASH_ADDR_CardType);//卡类型
+	point_bit = flash_param_get(FLASH_LIST_PointBit, FLASH_ADDR_PointBit);//小数
+	price_bit = flash_param_get(FLASH_LIST_PriceBit, FLASH_ADDR_PriceBit);//价格位数
+	price_max = flash_param_get(FLASH_LIST_PriceMax, FLASH_ADDR_PriceMax);//最大价格
+	
+	class_global.net.password = DEF_FLASH_PassWord;//联机密码
+	
+	class_global.sys.factory_en = (enum FACTOTY_MODE)flash_param_get(FLASH_LIST_FactoryEn, FLASH_ADDR_FactoryEn);//工厂模式
+	class_global.trade.price = flash_param_get(FLASH_LIST_PriceMax, FLASH_ADDR_PriceMax);//价格
+	
+	for(i = 0; i < 6; i++)//刷卡器接口
+	{
+		class_global.ireader[i].equ.interface = DEF_CARD_INTERFACE;
+	}
 }
 

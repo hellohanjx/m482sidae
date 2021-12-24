@@ -3,10 +3,10 @@
 
 #include "M480.h"
 
-void adc_config(void);
+void _adc_config(void);
 
-uint16_t get_internal_senser_adc(void);
-uint16_t get_external_senser_adc(void);
+uint16_t _get_internal_senser_adc(void);
+uint16_t _get_external_senser_adc(void);
 
 
 #endif

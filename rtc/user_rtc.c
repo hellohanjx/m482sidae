@@ -25,15 +25,15 @@ CUR_TIME get_cur_time(void)
 
 
 /*
-@功能：设置日期/时间
-@参数：type = 0只设置时间；type = 1 设置日期+时间
+@功能：设置日期+时间
+@参数：日期，时间
 @返回值：TRUE，设置成功；FALSE，设置失败
 */
-uint8_t set_rtc_time(uint8_t type, uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t min, uint8_t sec)
+uint8_t set_rtc_time(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t min, uint8_t sec)
 {
 	S_RTC_TIME_DATA_T time;
 	
-	if(year > 100 && type == 1)
+	if(year > 100)
 		return FALSE;
 	if(month < 1 || month > 12)
 		return FALSE;
@@ -52,6 +52,7 @@ uint8_t set_rtc_time(uint8_t type, uint8_t year, uint8_t month, uint8_t day, uin
 	time.u32Hour = hour;
 	time.u32Minute = min;
 	time.u32Second = sec;
+	time.u32TimeScale = RTC_CLOCK_24;
 	
 	RTC_SetDateAndTime(&time);
 

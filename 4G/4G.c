@@ -161,7 +161,7 @@ static uint8_t callback_4g_recv(UART7_DATA *rx)
 	if(rx->len != 0)
 	{
 		if(rx->buf[0] == 0x0D && rx->buf[1] == 0x0A)
-			c4g_recv_send_isr();
+			c4g_sem_send();
 	}
 	return TRUE;
 }
@@ -212,7 +212,7 @@ static uint8_t c4g_close_cmd_echo(void)
 	uint8_t err;
 	
 	_uart7_send(&rx, (uint8_t*)close_cmd_echo, (sizeof(close_cmd_echo) - 1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(300);//300ms超时
+	err = c4g_sem_get(300);//300ms超时
 	if(err == pdTRUE)
 	{
 		//返回“OK”
@@ -239,7 +239,7 @@ static uint8_t c4g_chk_sim(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)chk_pin, (sizeof(chk_pin) - 1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(5000);//等待超时 5s
+	err = c4g_sem_get(5000);//等待超时 5s
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[2]), chk_pin_ack2, sizeof(chk_pin_ack2) - 1) )//从第3个字符开始比较,
@@ -275,7 +275,7 @@ static uint8_t c4g_sim_reg(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)chk_sim_reg, (sizeof(chk_sim_reg) - 1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(300);//等待超时
+	err = c4g_sem_get(300);//等待超时
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从倒数第3个字符开始比较,
@@ -328,7 +328,7 @@ static uint8_t c4g_net_reg(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)chk_net_reg, (sizeof(chk_net_reg) - 1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(300);//等待超时
+	err = c4g_sem_get(300);//等待超时
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
@@ -382,7 +382,7 @@ static uint8_t c4g_chk_point(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)chk_link_point, (sizeof(chk_link_point) - 1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(300);//等待超时
+	err = c4g_sem_get(300);//等待超时
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//比较最后的"OK"
@@ -445,7 +445,7 @@ static uint8_t c4g_set_point(void)
 	else
 		return FALSE;
 	
-	err = c4g_recv_get(300);//等待超时
+	err = c4g_sem_get(300);//等待超时
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
@@ -480,7 +480,7 @@ static uint8_t c4g_chk_context(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)chk_pdp_context, (sizeof(chk_pdp_context) - 1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(15000);//等待超时15s
+	err = c4g_sem_get(15000);//等待超时15s
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
@@ -534,7 +534,7 @@ static uint8_t c4g_active_context(void)
 	cost_time = xTaskGetTickCount();
 	#endif
 	_uart7_send(&rx, (uint8_t*)active_pdp_context, (sizeof(active_pdp_context) - 1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(15000);//等待超时15s
+	err = c4g_sem_get(15000);//等待超时15s
 	if(err == pdTRUE)
 	{
 		#if C_4G_LOG
@@ -581,7 +581,7 @@ static uint8_t c4g_deactive_context(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)deactive_pdp_context, (sizeof(deactive_pdp_context) - 1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(40000);//等待超时40s
+	err = c4g_sem_get(40000);//等待超时40s
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
@@ -640,7 +640,7 @@ static uint8_t c4g_creat_tcp(void)
 	cost_time = xTaskGetTickCount();
 	#endif
 	_uart7_send(&rx, (uint8_t*)creat_tcp, strlen(creat_tcp), callback_4g_recv);//串口发送
-	err = c4g_recv_get(153000);//等待超时153s
+	err = c4g_sem_get(153000);//等待超时153s
 	if(err == pdTRUE)
 	{
 		#if C_4G_LOG
@@ -684,7 +684,7 @@ static uint8_t c4g_close_tcp(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)close_tcp, (sizeof(close_tcp) - 1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(10000);//等待超时10s
+	err = c4g_sem_get(10000);//等待超时10s
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[2]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
@@ -717,7 +717,7 @@ static uint8_t c4g_test_tcp(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)test_tcp, (sizeof(test_tcp) - 1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(300);//等待超时300ms
+	err = c4g_sem_get(300);//等待超时300ms
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较
@@ -746,7 +746,7 @@ static uint8_t c4g_chk_tcp(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)chk_tcp, (sizeof(chk_tcp) - 1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(15000);//等待超时15s
+	err = c4g_sem_get(15000);//等待超时15s
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
@@ -824,7 +824,7 @@ static uint8_t c4g_exit_transpartent(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)exit_transpartent, (sizeof(exit_transpartent) -1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(1000);//等待超时
+	err = c4g_sem_get(1000);//等待超时
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[2]), common_ack, sizeof(common_ack) - 1) )//从第3个字符开始比较,
@@ -853,7 +853,7 @@ static uint8_t c4g_exit_transpartent2(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)exit_transpartent2, (sizeof(exit_transpartent2) -1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(1000);//等待超时
+	err = c4g_sem_get(1000);//等待超时
 	if(err == pdTRUE)
 	{
 		return TRUE;//激活成功
@@ -878,7 +878,7 @@ static uint8_t c4g_enter_transparent(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)enter_transparent_mode, (sizeof(enter_transparent_mode) - 1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(10000);//等待超时10s
+	err = c4g_sem_get(10000);//等待超时10s
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[2]), creat_tcp_ack, sizeof(creat_tcp_ack) - 1) )//从第3个字符开始比较,
@@ -914,7 +914,7 @@ static uint8_t c4g_change_transpartent(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)change_transparent_mode, (sizeof(change_transparent_mode) - 1), callback_4g_recv);//串口发送
-	err = c4g_recv_get(300);//等待超时
+	err = c4g_sem_get(300);//等待超时
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[2]), creat_tcp_ack, sizeof(creat_tcp_ack) - 1) )//从第3个字符开始比较,
@@ -976,7 +976,7 @@ static uint8_t c4g_check_Operators(void)
 		uint8_t err;
 		
 		_uart7_send(&rx, (uint8_t*)chk_Operators, (sizeof(chk_Operators) - 1), callback_4g_recv);//串口发送
-		err = c4g_recv_get(3000);//1.8s超时
+		err = c4g_sem_get(3000);//1.8s超时
 		if(err == pdTRUE)
 		{
 			if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//比较最后的"OK"
@@ -1022,7 +1022,7 @@ static uint8_t c4g_chk_ICCID(void)
 	uint8_t i;
 
 	_uart7_send(&rx, (uint8_t*)chk_ICCID, (sizeof(chk_ICCID) - 1), callback_4g_recv);
-	err = c4g_recv_get(300);//等待超时
+	err = c4g_sem_get(300);//等待超时
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[2]), chk_ICCID_ack, sizeof(chk_ICCID_ack) - 1) )//从第3个字符开始比较,
@@ -1058,7 +1058,7 @@ static uint8_t c4g_chk_quality(void)
 
 
 	_uart7_send(&rx, (uint8_t*)chk_signal, (sizeof(chk_signal) - 1), callback_4g_recv);
-	err = c4g_recv_get(300);//等待超时
+	err = c4g_sem_get(300);//等待超时
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[2]), chk_signal_ack, sizeof(chk_signal_ack) - 1) )//从第3个字符开始比较

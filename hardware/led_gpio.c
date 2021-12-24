@@ -5,7 +5,7 @@
 /*
 @功能：led初始化
 */
-void led_config(void)
+void _led_config(void)
 {
 	GPIO_SetMode(PF, BIT4, GPIO_MODE_OUTPUT);
 	GPIO_SetMode(PF, BIT5, GPIO_MODE_OUTPUT);

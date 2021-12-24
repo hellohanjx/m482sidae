@@ -6,7 +6,7 @@
 #define LED_BREATH		PF4
 #define LED_NET				PF5
 
-void led_config(void);
+void _led_config(void);
 
 
 #endif

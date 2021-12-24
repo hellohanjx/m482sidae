@@ -1,36 +1,72 @@
 #include "msg.h"
 #include "global.h"
+#include "uart0_log.h"
+
+
 
 /*************************************************************************************************************************************************
 @说明：4G接收数据信号量
 *************************************************************************************************************************************************/
-static SemaphoreHandle_t sem_4g_recv;//通讯接收信号量句柄
+static SemaphoreHandle_t handle_4g_recv;//通讯接收信号量句柄
 
 /*
 @说明：接收信号量释放
 */
-static void c4g_recv_init(void)
+static void c4g_sem_init(void)
 {
-	sem_4g_recv = xSemaphoreCreateBinary();//创建二值信号量（此信号量默认空）
+	handle_4g_recv = xSemaphoreCreateBinary();//创建二值信号量（此信号量默认空）
 }
 /*
 @说明：申请信号量
 @参数：time，等待信号量超时时间
 */
-BaseType_t c4g_recv_get(uint32_t time)
+BaseType_t c4g_sem_get(uint32_t time)
 {
-	return xSemaphoreTake(sem_4g_recv, time);
+	return xSemaphoreTake(handle_4g_recv, time);
 }
 /*
 @说明：中断级释放信号量
 */
-BaseType_t c4g_recv_send_isr(void)
+BaseType_t c4g_sem_send(void)
 {
 	BaseType_t taskWoken;//这个值等于pdTRUE == 1时退出中断前必须进行任务切换
-	return xSemaphoreGiveFromISR(sem_4g_recv, &taskWoken);//中断级信号量释放（不能释放互斥型信号量）
+	return xSemaphoreGiveFromISR(handle_4g_recv, &taskWoken);//中断级信号量释放（不能释放互斥型信号量）
 }
 
 
+
+/*************************************************************************************************************************************************
+@说明：log 接口接收数据队列
+*************************************************************************************************************************************************/
+#define LOG_QUEUE_SIZE  	10	//队列大小
+
+static QueueHandle_t handle_log_queue;//队列句柄
+
+/*
+@功能：创建队列
+*/
+static void log_queue_init(void)
+{
+	handle_log_queue = xQueueCreate(LOG_QUEUE_SIZE, sizeof(UART0_DATA)); //创建队列
+}
+
+/*
+@功能：加入队列
+@参数：mymail，消息指针
+*/
+uint8_t log_queue_send(UART0_DATA msg)
+{
+	BaseType_t taskWoken;//如果发送消息导致一个优先级较高的任务运行，则这里 taskWoken = pfTRUE
+	return xQueueSendFromISR(handle_log_queue, (void*)&msg, &taskWoken);//一直等待队列空，直到发送完毕
+}
+/*
+@功能：获取队列中的消息
+@参数：msg,消息缓冲指针；time，超时时间
+*/
+BaseType_t log_queue_get(void *const msg, TickType_t time)
+{
+	return xQueueReceive(handle_log_queue, msg, time);
+}
 
 
 
@@ -97,50 +133,44 @@ void  mail_release(MAIL* mail)
 *******************/
 #define QUEUE_REPORT_SIZE  	200	//汇报队列大小
 
-static QueueHandle_t queue_report;//通讯队列句柄
+static QueueHandle_t handle_report_queue;//通讯队列句柄
 /*
 @功能：创建通讯队列
 */
 static void report_queue_init(void)
 {
-	queue_report = xQueueCreate(QUEUE_REPORT_SIZE, sizeof(MAIL)); //创建发送队列
+	handle_report_queue = xQueueCreate(QUEUE_REPORT_SIZE, sizeof(MAIL)); //创建发送队列
 }
 
 /*
-@功能：汇报消息加到通讯队列尾
-@参数：mymail，消息指针
-*/
-uint8_t report_to_tail(MAIL* mymail)
-{
-	configASSERT(mymail);
-	if(mymail != NULL)
-	{
-		BaseType_t err = xQueueSend(queue_report, (void*)&mymail, 0);//丢到队列尾；不等待，直接返回发送消息的结果
-		if(err == errQUEUE_FULL)
-		{
-			mail_release(mymail);
-			printf("add_report_info is full\r\n\r\n");
-			return FALSE;
-		}
-		return TRUE;
-	}
-	return FALSE;
-}
-/*
 @功能：汇报消息加到通讯队列头
-@参数：mymail，消息指针
+@参数：mymail，消息指针；type=1 发送到队列头，type=0 发送到队列尾
 */
-uint8_t report_to_head(MAIL* mymail)
+uint8_t report_queue_send(MAIL* mymail, uint8_t type)
 {
+	BaseType_t err;
 	configASSERT(mymail);
 	if (mymail != NULL)
 	{
-		BaseType_t err = xQueueSendToFront(queue_report, (void*)&mymail, portMAX_DELAY);//丢到队列头
-		if(err == errQUEUE_FULL)
+		if(type)
 		{
-			mail_release(mymail);
-			printf("report_to_head is full\r\n\r\n");
-			return FALSE;
+			err = xQueueSendToFront(handle_report_queue, (void*)&mymail, portMAX_DELAY);//丢到队列头
+			if(err == errQUEUE_FULL)
+			{
+				mail_release(mymail);
+				printf("report_to_head is full\r\n\r\n");
+				return FALSE;
+			}
+		}
+		else
+		{
+			err = xQueueSend(handle_report_queue, (void*)&mymail, 0);//丢到队列尾；不等待，直接返回发送消息的结果
+			if(err == errQUEUE_FULL)
+			{
+				mail_release(mymail);
+				printf("add_report_info is full\r\n\r\n");
+				return FALSE;
+			}
 		}
 		return TRUE;
 	}
@@ -151,9 +181,9 @@ uint8_t report_to_head(MAIL* mymail)
 @功能：获取队列中的消息
 @参数：msg,消息缓冲指针；time，超时时间
 */
-BaseType_t report_data_get(void *const msg, TickType_t time)
+BaseType_t report_queue_get(void *const msg, TickType_t time)
 {
-	return xQueueReceive(queue_report, msg, time);
+	return xQueueReceive(handle_report_queue, msg, time);
 }
 
 /********************
@@ -172,40 +202,34 @@ static void instant_queue_init(void)
 }
 
 /*
-@功能：即时消息加到队列尾
-@参数：mymail，消息指针
+@功能：即时消息加入队列
+@参数：mymail，消息指针；type=0，加到队列尾，type=1，加到队列头
 */
-uint8_t instant_to_tail(MAIL* mymail)
+uint8_t instant_queue_send(MAIL* mymail, uint8_t type)
 {
-	configASSERT(mymail);
-	if(mymail != NULL)
-	{
-		BaseType_t err = xQueueSend(queue_instant, (void*)&mymail, 0);//丢到队列尾；不等待，直接返回发送消息的结果
-		if(err == errQUEUE_FULL)
-		{
-			mail_release(mymail);
-			printf("instant_to_tail is full\r\n\r\n");
-			return FALSE;
-		}
-		return TRUE;
-	}
-	return FALSE;
-}
-/*
-@功能：即时消息加到队列头
-@参数：mymail，消息指针
-*/
-uint8_t instant_to_head(MAIL* mymail)
-{
+	BaseType_t err;
 	configASSERT(mymail);
 	if (mymail != NULL)
 	{
-		BaseType_t err = xQueueSendToFront(queue_instant, (void*)&mymail, portMAX_DELAY);//丢到队列头
-		if(err == errQUEUE_FULL)
+		if(type)
 		{
-			mail_release(mymail);
-			printf("instant_to_head is full\r\n\r\n");
-			return FALSE;
+			 err = xQueueSendToFront(queue_instant, (void*)&mymail, portMAX_DELAY);//丢到队列头
+			if(err == errQUEUE_FULL)
+			{
+				mail_release(mymail);
+				printf("instant_to_head is full\r\n\r\n");
+				return FALSE;
+			}
+		}
+		else
+		{
+			err = xQueueSend(queue_instant, (void*)&mymail, 0);//丢到队列尾；不等待，直接返回发送消息的结果
+			if(err == errQUEUE_FULL)
+			{
+				mail_release(mymail);
+				printf("instant_to_tail is full\r\n\r\n");
+				return FALSE;
+			}
 		}
 		return TRUE;
 	}
@@ -216,7 +240,7 @@ uint8_t instant_to_head(MAIL* mymail)
 @功能：获取队列中的消息
 @参数：msg,消息缓冲指针；time，超时时间
 */
-BaseType_t instant_data_get(void *const msg, TickType_t time)
+BaseType_t instant_queue_get(void *const msg, TickType_t time)
 {
 	return xQueueReceive(queue_instant, msg, time);
 }
@@ -225,34 +249,411 @@ BaseType_t instant_data_get(void *const msg, TickType_t time)
 /*********************************
 @说明：通信接口接收数据信号量
 *********************************/
-static SemaphoreHandle_t sem_commucation_recv;//通讯接收信号量句柄
+static SemaphoreHandle_t handle_communication_sem;//通讯接收信号量句柄
 
 /*
 @说明：接收信号量释放
 */
-static void commucation_bus_init(void)
+static void communication_sem_init(void)
 {
-	sem_commucation_recv = xSemaphoreCreateBinary();//创建二值信号量（此信号量默认空）
+	handle_communication_sem = xSemaphoreCreateBinary();//创建二值信号量（此信号量默认空）
 }
 /*
 @说明：申请信号量
 @参数：time，等待信号量超时时间
 */
-BaseType_t commucation_sem_get(uint32_t time)
+BaseType_t communication_sem_get(uint32_t time)
 {
-	return xSemaphoreTake(sem_commucation_recv,  time);
+	return xSemaphoreTake(handle_communication_sem,  time);
 }
 /*
 @说明：中断中发送信号量
 */
-BaseType_t commucation_sem_send_isr(void)
+BaseType_t communication_sem_send(void)
 {
 	BaseType_t xHigherPriorityTaskWoken;//这个值等于pdTRUE == 1时退出中断前必须进行任务切换
-	return xSemaphoreGiveFromISR(sem_commucation_recv, &xHigherPriorityTaskWoken);//中断级信号量释放（不能释放互斥型信号量）
+	return xSemaphoreGiveFromISR(handle_communication_sem, &xHigherPriorityTaskWoken);//中断级信号量释放（不能释放互斥型信号量）
 }
 
 
 
+
+
+/***********************************************************************************************************************************************************
+@说明：6个uart 接收信号量
+***********************************************************************************************************************************************************/
+/*********************
+@说明：uart1 接收信号量
+*********************/
+static SemaphoreHandle_t  handle_uart1_sem;//信号量句柄
+
+/*
+@说明：接收信号量释放
+*/
+static void uart1_sem_init(void)
+{
+	handle_uart1_sem = xSemaphoreCreateBinary();//创建二值信号量（此信号量默认空）
+}
+/*
+@说明：申请信号量
+@参数：time，等待信号量超时时间
+*/
+static BaseType_t uart1_sem_get(uint32_t time)
+{
+	return xSemaphoreTake(handle_uart1_sem,  time);
+}
+/*
+@说明：中断级释放信号量
+*/
+static BaseType_t uart1_sem_send(void)
+{
+	BaseType_t taskWoken;//这个值等于pdTRUE == 1时退出中断前必须进行任务切换
+	return xSemaphoreGiveFromISR(handle_uart1_sem, &taskWoken);//中断级信号量释放（不能释放互斥型信号量）
+}
+
+/*********************
+@说明：uart2 接收信号量
+*********************/
+static SemaphoreHandle_t  handle_uart2_sem;//信号量句柄
+
+/*
+@说明：接收信号量释放
+*/
+static void uart2_sem_init(void)
+{
+	handle_uart2_sem = xSemaphoreCreateBinary();//创建二值信号量（此信号量默认空）
+}
+/*
+@说明：申请信号量
+@参数：time，等待信号量超时时间
+*/
+static BaseType_t uart2_sem_get(uint32_t time)
+{
+	return xSemaphoreTake(handle_uart2_sem,  time);
+}
+/*
+@说明：中断级释放信号量
+*/
+static BaseType_t uart2_sem_send(void)
+{
+	BaseType_t taskWoken;//这个值等于pdTRUE == 1时退出中断前必须进行任务切换
+	return xSemaphoreGiveFromISR(handle_uart2_sem, &taskWoken);//中断级信号量释放（不能释放互斥型信号量）
+}
+
+/*********************
+@说明：uart3 接收信号量
+*********************/
+static SemaphoreHandle_t  handle_uart3_sem;//信号量句柄
+
+/*
+@说明：接收信号量释放
+*/
+static void uart3_sem_init(void)
+{
+	handle_uart3_sem = xSemaphoreCreateBinary();//创建二值信号量（此信号量默认空）
+}
+/*
+@说明：申请信号量
+@参数：time，等待信号量超时时间
+*/
+static BaseType_t uart3_sem_get(uint32_t time)
+{
+	return xSemaphoreTake(handle_uart3_sem,  time);
+}
+/*
+@说明：中断级释放信号量
+*/
+static BaseType_t uart3_sem_send(void)
+{
+	BaseType_t taskWoken;//这个值等于pdTRUE == 1时退出中断前必须进行任务切换
+	return xSemaphoreGiveFromISR(handle_uart3_sem, &taskWoken);//中断级信号量释放（不能释放互斥型信号量）
+}
+
+/*********************
+@说明：uart4 接收信号量
+*********************/
+static SemaphoreHandle_t  handle_uart4_sem;//信号量句柄
+
+/*
+@说明：接收信号量释放
+*/
+static void uart4_sem_init(void)
+{
+	handle_uart4_sem = xSemaphoreCreateBinary();//创建二值信号量（此信号量默认空）
+}
+/*
+@说明：申请信号量
+@参数：time，等待信号量超时时间
+*/
+static BaseType_t uart4_sem_get(uint32_t time)
+{
+	return xSemaphoreTake(handle_uart4_sem,  time);
+}
+/*
+@说明：中断级释放信号量
+*/
+static BaseType_t uart4_sem_send(void)
+{
+	BaseType_t taskWoken;//这个值等于pdTRUE == 1时退出中断前必须进行任务切换
+	return xSemaphoreGiveFromISR(handle_uart4_sem, &taskWoken);//中断级信号量释放（不能释放互斥型信号量）
+}
+
+/*********************
+@说明：uart5 接收信号量
+*********************/
+static SemaphoreHandle_t  handle_uart5_sem;//信号量句柄
+
+/*
+@说明：接收信号量释放
+*/
+static void uart5_sem_init(void)
+{
+	handle_uart5_sem = xSemaphoreCreateBinary();//创建二值信号量（此信号量默认空）
+}
+/*
+@说明：申请信号量
+@参数：time，等待信号量超时时间
+*/
+static BaseType_t uart5_sem_get(uint32_t time)
+{
+	return xSemaphoreTake(handle_uart5_sem,  time);
+}
+/*
+@说明：中断级释放信号量
+*/
+static BaseType_t uart5_sem_send(void)
+{
+	BaseType_t taskWoken;//这个值等于pdTRUE == 1时退出中断前必须进行任务切换
+	return xSemaphoreGiveFromISR(handle_uart5_sem, &taskWoken);//中断级信号量释放（不能释放互斥型信号量）
+}
+
+
+/*********************
+@说明：uart6 接收信号量
+*********************/
+static SemaphoreHandle_t  handle_uart6_sem;//信号量句柄
+
+/*
+@说明：接收信号量释放
+*/
+static void uart6_sem_init(void)
+{
+	handle_uart6_sem = xSemaphoreCreateBinary();//创建二值信号量（此信号量默认空）
+}
+/*
+@说明：申请信号量
+@参数：time，等待信号量超时时间
+*/
+static BaseType_t uart6_sem_get(uint32_t time)
+{
+	return xSemaphoreTake(handle_uart6_sem,  time);
+}
+/*
+@说明：中断级释放信号量
+*/
+static BaseType_t uart6_sem_send(void)
+{
+	BaseType_t taskWoken;//这个值等于pdTRUE == 1时退出中断前必须进行任务切换
+	return xSemaphoreGiveFromISR(handle_uart6_sem, &taskWoken);//中断级信号量释放（不能释放互斥型信号量）
+}
+
+
+/*********************************************************************************************************************************************
+@说明：刷卡消息队列
+@时间：2021.12.24
+*********************************************************************************************************************************************/
+/*******************
+@@@刷卡器1队列
+*******************/
+#define IREADER1_QUEEN_SIZE 			5			//状态机消息队列大小
+static QueueHandle_t handle_ireader1_queue;					//状态机消息句柄
+/*
+@功能：创建状态机消息队列
+*/
+static void ireader1_queue_init(void)
+{
+	handle_ireader1_queue = xQueueCreate(IREADER1_QUEEN_SIZE, sizeof(IREADER_MSG));//创建状态机队列
+}
+/*
+@功能：发送一条信息到队列后
+@参数：msg，消息指针
+@说明：这里 msg 如果用 *msg，则是指针传递；msg则是值传递
+*/
+static uint8_t ireader1_queue_send(IREADER_MSG msg)
+{
+	return xQueueSend(handle_ireader1_queue, (void*)&msg, 0);//发送消息不等待，不成功立即返回结果
+}
+/*
+@功能：获取队列中的消息
+@参数：msg,消息缓冲指针；time，超时时间
+*/
+static BaseType_t ireader1_queue_get(void *const msg, TickType_t time)
+{
+	return xQueueReceive(handle_ireader1_queue, msg, time);
+}
+
+/*******************
+@@@刷卡器2队列
+*******************/
+#define IREADER2_QUEEN_SIZE 			5			//状态机消息队列大小
+static QueueHandle_t handle_ireader2_queue;					//状态机消息句柄
+/*
+@功能：创建状态机消息队列
+*/
+static void ireader2_queue_init(void)
+{
+	handle_ireader2_queue = xQueueCreate(IREADER2_QUEEN_SIZE, sizeof(IREADER_MSG));//创建状态机队列
+}
+/*
+@功能：发送一条信息到队列后
+@参数：msg，消息指针
+@说明：这里 msg 如果用 *msg，则是指针传递；msg则是值传递
+*/
+static uint8_t ireader2_queue_send(IREADER_MSG msg)
+{
+	return xQueueSend(handle_ireader2_queue, (void*)&msg, 0);//发送消息不等待，不成功立即返回结果
+}
+/*
+@功能：获取队列中的消息
+@参数：msg,消息缓冲指针；time，超时时间
+*/
+static BaseType_t ireader2_queue_get(void *const msg, TickType_t time)
+{
+	return xQueueReceive(handle_ireader2_queue, msg, time);
+}
+
+/*******************
+@@@刷卡器3队列
+*******************/
+#define IREADER3_QUEEN_SIZE 			5			//状态机消息队列大小
+static QueueHandle_t handle_ireader3_queue;					//状态机消息句柄
+/*
+@功能：创建状态机消息队列
+*/
+static void ireader3_queue_init(void)
+{
+	handle_ireader3_queue = xQueueCreate(IREADER3_QUEEN_SIZE, sizeof(IREADER_MSG));//创建状态机队列
+}
+/*
+@功能：发送一条信息到队列后
+@参数：msg，消息指针
+@说明：这里 msg 如果用 *msg，则是指针传递；msg则是值传递
+*/
+static uint8_t ireader3_queue_send(IREADER_MSG msg)
+{
+	return xQueueSend(handle_ireader3_queue, (void*)&msg, 0);//发送消息不等待，不成功立即返回结果
+}
+/*
+@功能：获取队列中的消息
+@参数：msg,消息缓冲指针；time，超时时间
+*/
+static BaseType_t ireader3_queue_get(void *const msg, TickType_t time)
+{
+	return xQueueReceive(handle_ireader3_queue, msg, time);
+}
+
+/*******************
+@@@刷卡器4队列
+*******************/
+#define IREADER4_QUEEN_SIZE 			5			//状态机消息队列大小
+static QueueHandle_t handle_ireader4_queue;					//状态机消息句柄
+/*
+@功能：创建状态机消息队列
+*/
+static void ireader4_queue_init(void)
+{
+	handle_ireader4_queue = xQueueCreate(IREADER4_QUEEN_SIZE, sizeof(IREADER_MSG));//创建状态机队列
+}
+/*
+@功能：发送一条信息到队列后
+@参数：msg，消息指针
+@说明：这里 msg 如果用 *msg，则是指针传递；msg则是值传递
+*/
+static uint8_t ireader4_queue_send(IREADER_MSG msg)
+{
+	return xQueueSend(handle_ireader4_queue, (void*)&msg, 0);//发送消息不等待，不成功立即返回结果
+}
+/*
+@功能：获取队列中的消息
+@参数：msg,消息缓冲指针；time，超时时间
+*/
+static BaseType_t ireader4_queue_get(void *const msg, TickType_t time)
+{
+	return xQueueReceive(handle_ireader4_queue, msg, time);
+}
+
+/*******************
+@@@刷卡器5队列
+*******************/
+#define IREADER5_QUEEN_SIZE 			5			//状态机消息队列大小
+static QueueHandle_t handle_ireader5_queue;					//状态机消息句柄
+/*
+@功能：创建状态机消息队列
+*/
+static void ireader5_queue_init(void)
+{
+	handle_ireader5_queue = xQueueCreate(IREADER5_QUEEN_SIZE, sizeof(IREADER_MSG));//创建状态机队列
+}
+/*
+@功能：发送一条信息到队列后
+@参数：msg，消息指针
+@说明：这里 msg 如果用 *msg，则是指针传递；msg则是值传递
+*/
+static uint8_t ireader5_queue_send(IREADER_MSG msg)
+{
+	return xQueueSend(handle_ireader5_queue, (void*)&msg, 0);//发送消息不等待，不成功立即返回结果
+}
+/*
+@功能：获取队列中的消息
+@参数：msg,消息缓冲指针；time，超时时间
+*/
+static BaseType_t ireader5_queue_get(void *const msg, TickType_t time)
+{
+	return xQueueReceive(handle_ireader5_queue, msg, time);
+}
+
+/*******************
+@@@刷卡器6队列
+*******************/
+#define IREADER6_QUEEN_SIZE 			5			//状态机消息队列大小
+static QueueHandle_t handle_ireader6_queue;					//状态机消息句柄
+/*
+@功能：创建状态机消息队列
+*/
+static void ireader6_queue_init(void)
+{
+	handle_ireader6_queue = xQueueCreate(IREADER6_QUEEN_SIZE, sizeof(IREADER_MSG));//创建状态机队列
+}
+/*
+@功能：发送一条信息到队列后
+@参数：msg，消息指针
+@说明：这里 msg 如果用 *msg，则是指针传递；msg则是值传递
+*/
+static uint8_t ireader6_queue_send(IREADER_MSG msg)
+{
+	return xQueueSend(handle_ireader6_queue, (void*)&msg, 0);//发送消息不等待，不成功立即返回结果
+}
+/*
+@功能：获取队列中的消息
+@参数：msg,消息缓冲指针；time，超时时间
+*/
+static BaseType_t ireader6_queue_get(void *const msg, TickType_t time)
+{
+	return xQueueReceive(handle_ireader6_queue, msg, time);
+}
+
+
+
+/*************************************
+@说明：定义队列操作数组
+*************************************/
+IREADER_QUEUE_SEND ireader_queue_send[] = {ireader1_queue_send, ireader2_queue_send, ireader3_queue_send, ireader4_queue_send, ireader5_queue_send, ireader6_queue_send};
+IREADER_QUEUE_GET ireader_queue_get[] = {ireader1_queue_get, ireader2_queue_get, ireader3_queue_get, ireader4_queue_get, ireader5_queue_get, ireader6_queue_get};
+/*************************************
+@说明：定义信号量操作数组
+*************************************/
+UART_SEM_SEND uart_sem_send[] = {uart5_sem_send, uart1_sem_send, uart4_sem_send, uart6_sem_send, uart2_sem_send, uart3_sem_send};
+UART_SEM_GET uart_sem_get[] = {uart5_sem_get, uart1_sem_get, uart4_sem_get, uart6_sem_get, uart2_sem_get, uart3_sem_get};
 
 
 /**************************************************************************************************************************
@@ -260,8 +661,22 @@ BaseType_t commucation_sem_send_isr(void)
 **************************************************************************************************************************/
 void msg_init(void)
 {
-	c4g_recv_init();
+	uart1_sem_init();
+	uart2_sem_init();
+	uart3_sem_init();
+	uart4_sem_init();
+	uart5_sem_init();
+	uart6_sem_init();
+	c4g_sem_init();
+	communication_sem_init();
+	
+	log_queue_init();
 	report_queue_init();
 	instant_queue_init();
-	commucation_bus_init();
+	ireader1_queue_init();
+	ireader2_queue_init();
+	ireader3_queue_init();
+	ireader4_queue_init();
+	ireader5_queue_init();
+	ireader6_queue_init();
 }

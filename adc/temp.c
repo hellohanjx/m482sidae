@@ -209,8 +209,8 @@ static int temp_search(uint32_t res)
 */
 int get_internal_temp(void)
 {
-//	printf("Current Temperature = %2.1f\n\n", (25+(((float)get_internal_senser_adc()/4095*3300)-675)/(-1.83)));
-	return (25+(((float)get_internal_senser_adc()/4095*3300)-675)/(-1.83));
+//	printf("Current Temperature = %2.1f\n\n", (25+(((float)_get_internal_senser_adc()/4095*3300)-675)/(-1.83)));
+	return (25+(((float)_get_internal_senser_adc()/4095*3300)-675)/(-1.83));
 }
 
 
@@ -224,9 +224,9 @@ void get_external_temp(int *val, uint8_t *state)
 	uint16_t adc1 = 0, adc2 = 0, adc3 = 0;
 	uint16_t average_adc = 0;
 	
-	adc1 = get_external_senser_adc();//查询adc检测值
-	adc2 = get_external_senser_adc();//查询adc检测值
-	adc3 = get_external_senser_adc();//查询adc检测值
+	adc1 = _get_external_senser_adc();//查询adc检测值
+	adc2 = _get_external_senser_adc();//查询adc检测值
+	adc3 = _get_external_senser_adc();//查询adc检测值
 	
 	average_adc = (adc1 + adc2 + adc3)/3;
 	

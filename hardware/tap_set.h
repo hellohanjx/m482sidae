@@ -3,6 +3,6 @@
 
 #include "M480.h"
 
-void tap_config(void);
+void _tap_config(void);
 
 #endif

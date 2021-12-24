@@ -89,9 +89,9 @@ void get_link_info(uint8_t *str, uint8_t type)
 		tmp[len] = 0;
 		for(j = 0; j < len; j++)
 			str[i++] = tmp[j];
-		printf("reset == ");
+		printf("sys reset type == ");//系统复位类型
 		printf(tmp);
-		printf("\r\n\r\n");
+		printf("\r\n");
 	}
 	
 	str[i++]='*'; 
@@ -526,9 +526,9 @@ uint8_t analysis_17_42_7(uint8_t *buf, uint8_t len)
 //	class_global.sys.channel_bit = 2;
 	
 	/**************** 刷卡接口 ****************/
-	for(i = 0, fac = 1000, class_global.ireader.interface = 0; i < 4; i++)
+	for(i = 0, fac = 1000, class_global.ireader[0].equ.interface = 0; i < 4; i++)
 	{
-		class_global.ireader.interface += (buf[26 + i] - '0')*fac;
+		class_global.ireader[0].equ.interface += (buf[26 + i] - '0')*fac;
 		fac /= 10;
 	}
 	
@@ -745,7 +745,7 @@ void get_vm_set(volatile uint8_t* str)
 	str[i++] = '*';
 	
 	//刷卡接口
-	len = sprintf(tmp, "%u", class_global.ireader.interface);
+	len = sprintf(tmp, "%u", class_global.ireader[0].equ.interface);
 	for(j = 0; j < len; j++)
 	{
 		str[i++] = tmp[j];
@@ -899,7 +899,7 @@ uint8_t get_factory_set(uint8_t *str, uint8_t type)
 
 	//满足3个条件，1.工厂模式；2.机器号1000000000；3.黑莓网关
 	if( (class_global.sys.factory_en == USER_MODE) || (class_global.net.id != 1000000000) 
-	|| (strncasecmp((char*)class_global.net.arr_ip, DEF_HEIM_IP, sizeof(DEF_HEIM_IP) - 1)) || (class_global.net.serverPort != DEF_HEIM_PORT) )
+	|| (strncasecmp((char*)class_global.net.arr_ip, DEF_HEIM_IP, sizeof(DEF_HEIM_IP) - 1)) || (class_global.net.serverPort != DEF_FLASH_Port) )
 		return 0;
 	
 	i = 0;
@@ -930,13 +930,13 @@ uint8_t get_factory_set(uint8_t *str, uint8_t type)
 	str[i++] = '*';//分隔符
 	
 	//CPU ID
-	sprintf(tmp, "%010u", (*(__IO uint32_t*)(0x1fff7a10)) );
+	sprintf(tmp, "%010u", class_global.sys.unique_id[0] );
 	for(j = 0; j < 10; j++)
 		str[i++] = tmp[j];
-	sprintf(tmp, "%010u", (*(__IO uint32_t*)(0x1fff7a14)) );
+	sprintf(tmp, "%010u", class_global.sys.unique_id[1] );
 	for(j = 0; j < 10; j++)
 		str[i++] = tmp[j];
-	sprintf(tmp, "%010u", (*(__IO uint32_t*)(0x1fff7a18)) );
+	sprintf(tmp, "%010u", class_global.sys.unique_id[2] );
 	for(j = 0; j < 10; j++)
 		str[i++] = tmp[j];
 		
@@ -1022,9 +1022,9 @@ uint8_t updata_factory_set(uint8_t *rx, uint16_t rx_len, uint8_t *tx)
 				class_global.net.id = strtoul(mac_id, 0, 10);//机器id转换为10进制值
 				class_global.net.serverPort = atoi(socket);//端口号换为10进制值
 //				
-//				flash_param_set(FLASH_LIST_VmId, FLASH_ADDR_VmId, FLASH_SIZE_VmId, class_global.net.id);//保存机器号
+//				flash_param_set(FLASH_LIST_Id, FLASH_ADDR_Id, FLASH_SIZE_VmId, class_global.net.id);//保存机器号
 //				flash_param_set(FLASH_LIST_Port, FLASH_ADDR_Port, FLASH_SIZE_Port, class_global.net.serverPort);//保存端口号
-//				flash_ip_set((char*)class_global.net.arr_ip, FLASH_LIST_IP, FLASH_ADDR_IP, FLASH_SIZE_IP);//保存ip
+//				flash_ip_set((char*)class_global.net.arr_ip, FLASH_LIST_Ip, FLASH_ADDR_Ip, FLASH_SIZE_IP);//保存ip
 //				flash_param_set(FLASH_LIST_FactoryEn, FLASH_ADDR_FactoryEn, FLASH_SIZE_FactoryEn, class_global.sys.factory_en);//保存工作模式
 ////				motor_match_auto();//自动匹配电机
 //				iwdg_feed();//喂狗

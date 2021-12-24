@@ -10,9 +10,9 @@ typedef struct UART7_DATA{
 	uint16_t size;		//ª∫≥Â¥Û–°
 }UART7_DATA;
 
-typedef uint8_t (*COMMUCATION_RECV_CALLBACK)(UART7_DATA *rx);
+typedef uint8_t (*COMMUNICATION_RECV_CALLBACK)(UART7_DATA *rx);
 
-void uart7_config(void);
-uint8_t _uart7_send(UART7_DATA **pt_rx, uint8_t *pt_txbuf , uint32_t tx_len, COMMUCATION_RECV_CALLBACK callback);
+void _uart7_config(uint32_t baud);
+uint8_t _uart7_send(UART7_DATA **pt_rx, uint8_t *pt_txbuf , uint32_t tx_len, COMMUNICATION_RECV_CALLBACK callback);
 
 #endif

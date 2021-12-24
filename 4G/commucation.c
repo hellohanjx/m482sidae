@@ -38,18 +38,10 @@ uint8_t get_network_state(uint8_t *state)
 @功能：汇报消息
 @参数：mymail,数据指针；type，0加到队列尾，1加到队列头
 */
-void add_report_info(MAIL* mymail, uint8_t type)
+void report_to_communication(MAIL* mymail, uint8_t type)
 {
-	if(type == FALSE)//加到队列尾
-	{
-		if(report_to_tail(mymail))
-			class_global.net.backlog_data++;//积压数据增加
-	}
-	else//加到队列头
-	{
-		if(report_to_head(mymail))
-			class_global.net.backlog_data++;//积压数据增加
-	}
+	if(report_queue_send(mymail, type))
+		class_global.net.backlog_data++;//积压数据增加
 }
 
 /*
@@ -66,7 +58,7 @@ static uint8_t callback_com_recv(UART7_DATA *rx)
 			chk += rx->buf[i];
 		if(chk == rx->buf[rx->len-1])
 		{
-			commucation_sem_send_isr(); //中断级信号量释放（不能释放互斥型信号量）
+			communication_sem_send(); //中断级信号量释放（不能释放互斥型信号量）
 		}
 	}
 	return TRUE;
@@ -157,7 +149,7 @@ static uint8_t send_restart(void)
 		pt_txbuf[1] = class_global.net.number + 1;//包序号
 		class_global.net.number = (class_global.net.number+1)%255;//更新编号
 		mail_to_bus(pt_txbuf, &pt_rx);
-		err = commucation_sem_get(ONE_SECOND*30);//30s 超时
+		err = communication_sem_get(ONE_SECOND*30);//30s 超时
 		if(err == pdTRUE)
 		{
 			if(pt_rx->buf[0] == 0x1D && pt_rx->buf[1] == pt_txbuf[1] && pt_rx->buf[8] == 0x31)//重启机器
@@ -253,7 +245,7 @@ static uint8_t get_param(uint8_t *str, UART7_DATA *rx)
 		class_global.net.number = (class_global.net.number+1)%255;
 		
 		mail_to_bus(str, &rx);
-		err = commucation_sem_get(ONE_SECOND*7);
+		err = communication_sem_get(ONE_SECOND*7);
 		if(err == pdTRUE && rx->buf[0] == 0x1D && rx->buf[1] == str[1])
 		{
 			if( !analysis_17_42_7(rx->buf, rx->len) )//解析返回包
@@ -268,7 +260,7 @@ static uint8_t get_param(uint8_t *str, UART7_DATA *rx)
 			class_global.net.number = (class_global.net.number+1)%255;
 			
 			mail_to_bus(str, &rx);
-			err = commucation_sem_get(ONE_SECOND*7);
+			err = communication_sem_get(ONE_SECOND*7);
 			if(err == pdTRUE && rx->buf[0] == 0x1D && rx->buf[1] == str[1])
 			{
 				if( !analysis_17_42_8(rx->buf, rx->len) )//解析返回包
@@ -283,7 +275,7 @@ static uint8_t get_param(uint8_t *str, UART7_DATA *rx)
 				class_global.net.number = (class_global.net.number+1)%255;
 				
 				mail_to_bus(str, &rx);
-				err = commucation_sem_get(ONE_SECOND*7);
+				err = communication_sem_get(ONE_SECOND*7);
 				if(err == pdTRUE && rx->buf[0] == 0x1D && rx->buf[1] == str[1])
 				{
 					if( !analysis_17_42_9(rx->buf, rx->len) )//解析返回包
@@ -336,7 +328,7 @@ static void send_linking(uint8_t* first, uint32_t *correct, uint8_t *redownload)
 		str[1] = class_global.net.number+1; //包序号
 		class_global.net.number = (class_global.net.number+1)%255;//更新编号
 		mail_to_bus(str, &rx);
-		err = commucation_sem_get(ONE_SECOND*7);//等待应答信号量
+		err = communication_sem_get(ONE_SECOND*7);//等待应答信号量
 		if(err == pdTRUE)
 		{
 			i=0;
@@ -345,7 +337,7 @@ static void send_linking(uint8_t* first, uint32_t *correct, uint8_t *redownload)
 				uint32_t timelast;
 				if(i == 0)
 					timelast = xTaskGetTickCount();
-				err = commucation_sem_get(ONE_SECOND);//等待1s
+				err = communication_sem_get(ONE_SECOND);//等待1s
 				if(xTaskGetTickCount()-timelast >= ONE_SECOND)
 				{
 					timelast = xTaskGetTickCount();
@@ -363,7 +355,7 @@ static void send_linking(uint8_t* first, uint32_t *correct, uint8_t *redownload)
 				ctime[4] = (rx->buf[11]-'0')*10 + rx->buf[12]-'0';
 				ctime[5] = (rx->buf[13]-'0')*10 + rx->buf[14]-'0';
 				
-				if( set_rtc_time(1, ctime[0], ctime[1], ctime[2], ctime[3], ctime[4], ctime[5]) )//更新RTC时间
+				if( set_rtc_time(ctime[0], ctime[1], ctime[2], ctime[3], ctime[4], ctime[5]) )//更新RTC时间
 				{
 					send_restart();//发送重启查询
 					
@@ -392,7 +384,7 @@ static void send_linking(uint8_t* first, uint32_t *correct, uint8_t *redownload)
 							str[1] = class_global.net.number+1; //加上编号
 							class_global.net.number = (class_global.net.number+1)%255;//更新编号
 							mail_to_bus(str, &rx); //发送到远程管理端
-							err = commucation_sem_get(ONE_SECOND*7);
+							err = communication_sem_get(ONE_SECOND*7);
 							if(err == pdTRUE && rx->buf[0]==0x1D && rx->buf[1]==str[1])
 							{
 								get_machine_status(str);
@@ -400,7 +392,7 @@ static void send_linking(uint8_t* first, uint32_t *correct, uint8_t *redownload)
 								class_global.net.number = (class_global.net.number+1)%255;//更新编号
 								
 								mail_to_bus(str, &rx); //发送到远程管理端
-								err = commucation_sem_get(ONE_SECOND*7);
+								err = communication_sem_get(ONE_SECOND*7);
 								if(err == pdTRUE && rx->buf[0]==0x1D && rx->buf[1]==str[1])
 								{
 									//发送设置参数 20191021
@@ -409,7 +401,7 @@ static void send_linking(uint8_t* first, uint32_t *correct, uint8_t *redownload)
 									class_global.net.number = (class_global.net.number+1)%255;//更新编号
 									
 									mail_to_bus(str, &rx); //发送到远程管理端。
-									err = commucation_sem_get(ONE_SECOND*7);
+									err = communication_sem_get(ONE_SECOND*7);
 									if(err == pdTRUE && rx->buf[0]==0x1D && rx->buf[1]==str[1])
 									{
 										get_software_version(str);
@@ -417,7 +409,7 @@ static void send_linking(uint8_t* first, uint32_t *correct, uint8_t *redownload)
 										class_global.net.number = (class_global.net.number+1)%255;//更新编号
 										
 										mail_to_bus(str, &rx); //发送到远程管理端
-										err = commucation_sem_get(ONE_SECOND*7);
+										err = communication_sem_get(ONE_SECOND*7);
 										if(err == pdTRUE && rx->buf[0]==0x1D && rx->buf[1]==str[1])
 										{									
 											//工厂模式发送
@@ -427,7 +419,7 @@ static void send_linking(uint8_t* first, uint32_t *correct, uint8_t *redownload)
 												class_global.net.number = (class_global.net.number+1)%255;//更新编号
 												
 												mail_to_bus(str, &rx); //发送到远程管理端
-												err = commucation_sem_get(ONE_SECOND*7);
+												err = communication_sem_get(ONE_SECOND*7);
 												if(err == pdTRUE && rx->buf[0]==0x1D && rx->buf[1]==str[1])
 												{
 													updata_factory_set(rx->buf, rx->len, str);//处理收到数据
@@ -517,7 +509,7 @@ static uint8_t send_heart(uint32_t *hearTime, uint8_t *xintiao)//心跳包
 		class_global.net.number = (class_global.net.number+1)%255;
 		
 		mail_to_bus(xintiao, &rx);
-		err = commucation_sem_get(ONE_SECOND*10);
+		err = communication_sem_get(ONE_SECOND*10);
 		if( !(err == pdTRUE && rx->buf[0]==0x1D && rx->buf[1] == xintiao[1] && rx->buf[2] == 4) )//需要判断心跳回应是否正确
 		{
 			class_global.net.state = 0;
@@ -553,7 +545,7 @@ static uint8_t send_correct_time(uint32_t *correct)//发对时
 			pt_tx[1] = class_global.net.number+1;//加上编号
 			class_global.net.number = (class_global.net.number+1)%255;//更新编号
 			mail_to_bus(pt_tx, &rx);
-			err = commucation_sem_get(ONE_SECOND*30);//30s 超时
+			err = communication_sem_get(ONE_SECOND*30);//30s 超时
 			if(err == pdTRUE && rx->buf[0] == 0x1D && rx->buf[1] == pt_tx[1])
 			{
 				uint8_t ctime[6];
@@ -564,7 +556,7 @@ static uint8_t send_correct_time(uint32_t *correct)//发对时
 				ctime[4] = (rx->buf[11]-'0')*10 + rx->buf[12]-'0';
 				ctime[5] = (rx->buf[13]-'0')*10 + rx->buf[14]-'0';
 				
-				set_rtc_time(1, ctime[0], ctime[1], ctime[2], ctime[3], ctime[4], ctime[5]);
+				set_rtc_time(ctime[0], ctime[1], ctime[2], ctime[3], ctime[4], ctime[5]);
 				
 				send_restart();//发送重启查询
 			}
@@ -595,7 +587,7 @@ static uint8_t send_instant_data(void)
 	MAIL *cmail;
 	UART7_DATA *rx;
 	
-	err = instant_data_get((void*)&cmail, ONE_SECOND/10);//取即时数据
+	err = instant_queue_get((void*)&cmail, ONE_SECOND/10);//取即时数据
 	if(err == pdTRUE)
 	{
 		if(class_global.net.state)//这里是为了提高速度
@@ -605,12 +597,12 @@ static uint8_t send_instant_data(void)
 			class_global.net.number = (class_global.net.number+1)%255;
 			
 			mail_to_bus(cmail->addr, &rx);
-			err = commucation_sem_get(ONE_SECOND*10);
+			err = communication_sem_get(ONE_SECOND*10);
 			if(err == pdTRUE)
 			{
 				if(cmail->com_call_back != 0)//如果注册了回调函数，则调用
 				{
-					if(!(cmail->com_call_back(rx->buf, rx->len, cmail->addr))) //回调函数处理
+					if(!(cmail->com_call_back(rx->buf, rx->len, cmail->addr, cmail->id))) //回调函数处理
 					{
 						class_global.net.state = 0;//直接踹掉线，重新发起连接
 						rs = 2;//掉线
@@ -667,7 +659,7 @@ static uint8_t send_report_data(void)
 	
 	if(class_global.net.backlog_data)//有积压数据
 	{
-		err = report_data_get((void*)&cmail, 0);//取汇报数据
+		err = report_queue_get((void*)&cmail, 0);//取汇报数据
 		if(err == pdTRUE)
 		{
 			class_global.net.backlog_data ? (class_global.net.backlog_data--) : 0;//积压数据减1
@@ -676,15 +668,15 @@ static uint8_t send_report_data(void)
 			class_global.net.number = (class_global.net.number+1)%255;
 			
 			mail_to_bus(cmail->addr, &rx);
-			err = commucation_sem_get(ONE_SECOND*10);
+			err = communication_sem_get(ONE_SECOND*10);
 			if(err == pdTRUE)
 			{
 				if(cmail->com_call_back)//如果注册了回调函数，则调用
 				{
-					if(!(cmail->com_call_back(rx->buf, rx->len, cmail->addr))) //回调函数处理
+					if(!(cmail->com_call_back(rx->buf, rx->len, cmail->addr, cmail->id))) //回调函数处理
 					{
 						class_global.net.state = 0;//直接踹掉线，重新发起连接
-						add_report_info(cmail, TRUE);//加到队列头
+						report_to_communication(cmail, TRUE);//加到队列头
 					}
 					else
 					{
@@ -700,7 +692,7 @@ static uint8_t send_report_data(void)
 					else//应答错误
 					{
 						class_global.net.state = 0;//直接开始重新连接
-						add_report_info(cmail, TRUE);//加到队列头
+						report_to_communication(cmail, TRUE);//加到队列头
 					}
 				}
 			}
@@ -708,7 +700,7 @@ static uint8_t send_report_data(void)
 			{
 //				FSM_MSG* msg = 0;
 //				class_global.net.state = 0;
-//				add_report_info(cmail, TRUE);//加到队列头
+//				report_to_communication(cmail, TRUE);//加到队列头
 //				server_err_save(0, cmail->addr);//记录无应答数据
 //				
 //				msg = msg_applay(MSG_SIZE_DEFAULT);
@@ -739,7 +731,7 @@ static uint8_t send_report_data(void)
 /*
 @功能：通讯主任务
 */
-void main_task_commucation(void)
+void main_task_communication(void)
 {
 	uint32_t heart,correct;
 	uint8_t first_Link;
@@ -755,7 +747,6 @@ void main_task_commucation(void)
 	xintiao[2]=4;
 	first_Link = TRUE;
 	
-	uart7_config();//初始化串口
 	vTaskDelay(ONE_SECOND/2);//等待所有设备初始化完成
 	
 	while(1)

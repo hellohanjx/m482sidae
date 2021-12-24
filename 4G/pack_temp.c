@@ -75,7 +75,7 @@ void instant_equipment_state(uint8_t type, uint8_t state, uint32_t value)
 	str[i++] = curTime.sec + 1;
 	str[2] = i+1;
 	
-//	add_report_info(cmail, FALSE);
-	instant_to_tail(cmail);
+//	report_to_communication(cmail, FALSE);
+	instant_queue_send(cmail, TAIL);
 }
 

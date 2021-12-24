@@ -5,12 +5,12 @@
 
 static volatile UART7_DATA rx;	//接收数据
 static volatile UART7_DATA tx;	//发送数据
-static COMMUCATION_RECV_CALLBACK callBack_recv;//接收处理回调函数
+static COMMUNICATION_RECV_CALLBACK callBack_recv;//接收处理回调函数
 
 /*
 @功能：uart7串口配置，占用了SC1接口
 */
-void uart7_config(void)
+void _uart7_config(uint32_t baud)
 { 
 	CLK_EnableModuleClock(SC1_MODULE);//使能SC1时钟
 	CLK_SetModuleClock(SC1_MODULE, CLK_CLKSEL3_SC1SEL_HIRC, CLK_CLKDIV1_SC1(1));//设置时钟源与分频
@@ -18,7 +18,7 @@ void uart7_config(void)
   SYS->GPC_MFPL &= ~(SYS_GPC_MFPL_PC0MFP_Msk | SYS_GPC_MFPL_PC1MFP_Msk);
 	SYS->GPC_MFPL |= (SYS_GPC_MFPL_PC0MFP_SC1_CLK | SYS_GPC_MFPL_PC1MFP_SC1_DAT);
 	
-	SCUART_Open(SC1, 115200);
+	SCUART_Open(SC1, baud);
 	SC1->CTL |= (0x2 << 6);//(SC_CTL_RXTRGLV_Msk);//RX-FIFO ，3字节触发
 	SCUART_SetTimeoutCnt(SC1, 20);//FIFO 超时时间
 
@@ -88,7 +88,7 @@ void SC1_IRQHandler(void)
 @返回值：操作结果
 @注意：如果发送数据很快，这里需要采用信号量锁住发送过程
 */
-uint8_t _uart7_send(UART7_DATA **pt_rx, uint8_t *pt_txbuf , uint32_t tx_len, COMMUCATION_RECV_CALLBACK callback)
+uint8_t _uart7_send(UART7_DATA **pt_rx, uint8_t *pt_txbuf , uint32_t tx_len, COMMUNICATION_RECV_CALLBACK callback)
 {
 	uint8_t i;
 	if(pt_txbuf == 0)

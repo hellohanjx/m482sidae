@@ -4,7 +4,7 @@
 /*
 @功能：led初始化
 */
-void tap_config(void)
+void _tap_config(void)
 {
 	GPIO_SetMode(PD, BIT1, GPIO_MODE_OUTPUT);
 	GPIO_SetMode(PD, BIT2, GPIO_MODE_OUTPUT);

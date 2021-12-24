@@ -6,22 +6,6 @@
 #include "timers.h"
 #include "semphr.h"
 
-///* Demo application includes. */
-#include "partest.h"
-#include "flash.h"
-#include "flop.h"
-#include "integer.h"
-#include "PollQ.h"
-#include "semtest.h"
-#include "dynamic.h"
-#include "BlockQ.h"
-#include "blocktim.h"
-#include "countsem.h"
-#include "GenQTest.h"
-#include "QueueSet.h"
-#include "recmutex.h"
-#include "death.h"
-
 /* Hardware and starter kit includes. */
 #include "NuMicro.h"
 #include "hardware.h"
@@ -32,6 +16,8 @@
 #include "user_rtc.h"
 #include "temp.h"
 #include "led_gpio.h"
+#include "log_interface_cmd.h"
+#include "task_swipe.h"
 
 
 
@@ -40,9 +26,9 @@
 TaskHandle_t START_Task_Handler;	//任务句柄
 static void start_task( void *pvParameters );
 
-#define COMMUCATION_TASK_PRIO		23		//任务优先级
-#define COMMUCATION_STK_SIZE 		512		//任务堆栈大小
-TaskHandle_t Commucation_Task_Handler;		//任务句柄
+#define communication_TASK_PRIO		23		//任务优先级
+#define communication_STK_SIZE 		512		//任务堆栈大小
+TaskHandle_t communication_Task_Handler;		//任务句柄
 static void communication_task( void *pvParameters );
 
 #define TEST_TASK_PRIO		10		//任务优先级
@@ -54,6 +40,41 @@ static void test_task( void *pvParameters );
 #define IDLE_STK_SIZE 		256		//任务堆栈大小
 TaskHandle_t Idle_Task_Handler;		//任务句柄
 static void idle_task( void *pvParameters );
+
+#define LOG_TASK_PRIO		11		//任务优先级
+#define LOG_STK_SIZE 		256		//任务堆栈大小
+TaskHandle_t Log_Task_Handler;		//任务句柄
+static void log_task( void *pvParameters );
+
+#define SWIPE_1_TASK_PRIO		25		//任务优先级
+#define SWIPE_1_STK_SIZE 		256		//任务堆栈大小
+TaskHandle_t Swipe_1_Task_Handler;		//任务句柄
+static void swipe_1_task( void *pvParameters );
+
+#define SWIPE_2_TASK_PRIO		25		//任务优先级
+#define SWIPE_2_STK_SIZE 		256		//任务堆栈大小
+TaskHandle_t Swipe_2_Task_Handler;		//任务句柄
+static void swipe_2_task( void *pvParameters );
+
+#define SWIPE_3_TASK_PRIO		25		//任务优先级
+#define SWIPE_3_STK_SIZE 		256		//任务堆栈大小
+TaskHandle_t Swipe_3_Task_Handler;		//任务句柄
+static void swipe_3_task( void *pvParameters );
+
+#define SWIPE_4_TASK_PRIO		25		//任务优先级
+#define SWIPE_4_STK_SIZE 		256		//任务堆栈大小
+TaskHandle_t Swipe_4_Task_Handler;		//任务句柄
+static void swipe_4_task( void *pvParameters );
+
+#define SWIPE_5_TASK_PRIO		25		//任务优先级
+#define SWIPE_5_STK_SIZE 		256		//任务堆栈大小
+TaskHandle_t Swipe_5_Task_Handler;		//任务句柄
+static void swipe_5_task( void *pvParameters );
+
+#define SWIPE_6_TASK_PRIO		25		//任务优先级
+#define SWIPE_6_STK_SIZE 		256		//任务堆栈大小
+TaskHandle_t Swipe_6_Task_Handler;		//任务句柄
+static void swipe_6_task( void *pvParameters );
 
 /*
 @功能：内存测试
@@ -86,87 +107,38 @@ int main(void)
 }
 
 
-void vApplicationMallocFailedHook( void )
-{
-    /* vApplicationMallocFailedHook() will only be called if
-    configUSE_MALLOC_FAILED_HOOK is set to 1 in FreeRTOSConfig.h.  It is a hook
-    function that will get called if a call to pvPortMalloc() fails.
-    pvPortMalloc() is called internally by the kernel whenever a task, queue,
-    timer or semaphore is created.  It is also called by various parts of the
-    demo application.  If heap_1.c or heap_2.c are used, then the size of the
-    heap available to pvPortMalloc() is defined by configTOTAL_HEAP_SIZE in
-    FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API function can be used
-    to query the size of free heap space that remains (although it does not
-    provide information on how the remaining heap might be fragmented). */
-    taskDISABLE_INTERRUPTS();
-		printf("apply memory err\r\n");
-    for( ;; );
-}
-/*-----------------------------------------------------------*/
-
-void vApplicationIdleHook( void )
-{
-    /* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
-    to 1 in FreeRTOSConfig.h.  It will be called on each iteration of the idle
-    task.  It is essential that code added to this hook function never attempts
-    to block in any way (for example, call xQueueReceive() with a block time
-    specified, or call vTaskDelay()).  If the application makes use of the
-    vTaskDelete() API function (as this demo application does) then it is also
-    important that vApplicationIdleHook() is permitted to return to its calling
-    function, because it is the responsibility of the idle task to clean up
-    memory allocated by the kernel to any task that has since been deleted. */
-}
-/*-----------------------------------------------------------*/
-
-void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName )
-{
-    ( void ) pcTaskName;
-    ( void ) pxTask;
-
-    /* Run time stack overflow checking is performed if
-    configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook
-    function is called if a stack overflow is detected. */
-    taskDISABLE_INTERRUPTS();
-		printf("vApplicationStackOverflowHook\r\n");
-    for( ;; );
-}
-/*-----------------------------------------------------------*/
-
-void vApplicationTickHook( void )
-{
-    /* This function will be called by each tick interrupt if
-    configUSE_TICK_HOOK is set to 1 in FreeRTOSConfig.h.  User code can be
-    added here, but the tick hook is called from an interrupt context, so
-    code must not attempt to block, and only the interrupt safe FreeRTOS API
-    functions can be used (those that end in FromISR()).  */
-
-#if ( mainCREATE_SIMPLE_BLINKY_DEMO_ONLY == 0 )
-    {
-        /* In this case the tick hook is used as part of the queue set test. */
-        vQueueSetAccessQueueSetFromISR();
-    }
-#endif /* mainCREATE_SIMPLE_BLINKY_DEMO_ONLY */
-
-}
-
 
 /*******************************************************************
 @起始任务
 *******************************************************************/
 static void start_task( void *pvParameters )
 {
-	global_init();
 	msg_init();
 	hardware_config();//外设配置
+	global_init();
 	rtc_config();
 	
 	taskENTER_CRITICAL();//进入临界区
 
 	xTaskCreate( idle_task, 					"idle", 				IDLE_STK_SIZE, 					NULL, 	IDLE_TASK_PRIO, 					&Idle_Task_Handler );//创建空闲任务
-	xTaskCreate( communication_task, 	"Commucation", 	COMMUCATION_STK_SIZE, 	NULL, 	COMMUCATION_TASK_PRIO, 		&Commucation_Task_Handler );//创建通信任务
-	xTaskCreate( test_task, 					"test", 				TEST_STK_SIZE, 					NULL, 	TEST_TASK_PRIO, 					&Test_Task_Handler );//创建测试任务
+	xTaskCreate( communication_task, 	"communication", 	communication_STK_SIZE, 	NULL, 	communication_TASK_PRIO, 		&communication_Task_Handler );//创建通信任务
+	xTaskCreate( log_task, 						"log", 					LOG_STK_SIZE, 					NULL, 	LOG_TASK_PRIO, 						&Log_Task_Handler );//日志任务
+	
+	//刷卡器任务1~6
+	xTaskCreate( swipe_1_task, 						"swip_1", 			SWIPE_1_STK_SIZE, 			NULL, 	SWIPE_1_TASK_PRIO, 						&Swipe_1_Task_Handler );
+	xTaskCreate( swipe_2_task, 						"swip_2", 			SWIPE_2_STK_SIZE, 			NULL, 	SWIPE_2_TASK_PRIO, 						&Swipe_2_Task_Handler );
+	xTaskCreate( swipe_3_task, 						"swip_3", 			SWIPE_3_STK_SIZE, 			NULL, 	SWIPE_3_TASK_PRIO, 						&Swipe_3_Task_Handler );
+	xTaskCreate( swipe_4_task, 						"swip_4", 			SWIPE_4_STK_SIZE, 			NULL, 	SWIPE_4_TASK_PRIO, 						&Swipe_4_Task_Handler );
+	xTaskCreate( swipe_5_task, 						"swip_5", 			SWIPE_5_STK_SIZE, 			NULL, 	SWIPE_5_TASK_PRIO, 						&Swipe_5_Task_Handler );
+	xTaskCreate( swipe_6_task, 						"swip_6", 			SWIPE_6_STK_SIZE, 			NULL, 	SWIPE_6_TASK_PRIO, 						&Swipe_6_Task_Handler );
+	
+	
+	
+//	xTaskCreate( test_task, 					"test", 				TEST_STK_SIZE, 					NULL, 	TEST_TASK_PRIO, 					&Test_Task_Handler );//创建测试任务
 
+	
 //	vStartPolledQueueTasks( mainQUEUE_POLL_PRIORITY );//创建队列
+	
 	printf("FreeRTOS is starting ...\n");
 	
 	vTaskDelete(START_Task_Handler); //删除开始任务
@@ -223,27 +195,58 @@ static void idle_task( void *pvParameters )
 *******************************************************************/
 static void communication_task( void *pvParameters )
 {
-	main_task_commucation();
+	main_task_communication();
+}
+
+/*******************************************************************
+@日志任务
+*******************************************************************/
+static void log_task( void *pvParameters )
+{
+	task_log_recv();
+}
+
+/*******************************************************************
+@刷卡器任务
+*******************************************************************/
+static void swipe_1_task( void *pvParameters )
+{
+	task_swipe1();
+}
+static void swipe_2_task( void *pvParameters )
+{
+	task_swipe2();
+}
+static void swipe_3_task( void *pvParameters )
+{
+	task_swipe3();
+}
+static void swipe_4_task( void *pvParameters )
+{
+	task_swipe4();
+}
+static void swipe_5_task( void *pvParameters )
+{
+	task_swipe5();
+}
+static void swipe_6_task( void *pvParameters )
+{
+	task_swipe6();
 }
 
 
 /*******************************************************************
 @测试任务
 *******************************************************************/
-#include "uart1_config.h"
-#include "uart2_config.h"
-#include "uart3_config.h"
-#include "uart4_config.h"
-#include "uart5_config.h"
-#include "uart6_config.h"
+#include "uart_config.h"
 
 
-	UART1_DATA tx1, *rx1;
-	UART6_DATA tx6, *rx6;
-	UART2_DATA tx2, *rx2;
-	UART3_DATA tx3, *rx3;
-	UART4_DATA tx4, *rx4;
-	UART5_DATA tx5, *rx5;
+	UART_DATA tx1, *rx1;
+	UART_DATA tx6, *rx6;
+	UART_DATA tx2, *rx2;
+	UART_DATA tx3, *rx3;
+	UART_DATA tx4, *rx4;
+	UART_DATA tx5, *rx5;
 
 static void test_task( void *pvParameters )
 {

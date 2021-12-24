@@ -1,22 +1,19 @@
 #include "hardware.h"	//@注意：这个包含需要在"gpio.h"之前
 #include "led_gpio.h"
 #include "uart0_log.h"
-#include "uart1_config.h"
-#include "uart2_config.h"
-#include "uart3_config.h"
-#include "uart4_config.h"
-#include "uart5_config.h"
-#include "uart6_config.h"
+#include "uart_config.h"
 #include "uart7_config.h"
 #include "tap_set.h"
 #include "4g.h"
 #include "adc.h"
-
+#include "gpio_int.h"
+#include "isp_program.h"
+#include "swipe_led.h"
 
 /*
 @功能：所有引脚初始化
 */
-static void pin_config(void)
+static void _pin_config(void)
 {
 	//A引脚
 	SYS->GPA_MFPL &= ~(SYS_GPA_MFPL_PA0MFP_Msk | SYS_GPA_MFPL_PA1MFP_Msk| SYS_GPA_MFPL_PA2MFP_Msk | SYS_GPA_MFPL_PA3MFP_Msk | SYS_GPA_MFPL_PA4MFP_Msk | SYS_GPA_MFPL_PA5MFP_Msk | SYS_GPA_MFPL_PA6MFP_Msk
@@ -59,19 +56,22 @@ void hardware_config(void)
 {
 	SYS_UnlockReg();//解锁寄存器
 	
-	pin_config();
-	led_config();
-	tap_config();
+	_pin_config();
+	_led_config();
+	_tap_config();
 	_4g_config();
-	uart0_log_config();
-	uart1_config();
-	uart2_config();
-	uart3_config();
-	uart4_config();
-	uart5_config();
-	uart6_config();
-	uart7_config();
-	adc_config();
+	_uart0_config(115200);
+	_uart1_config(115200);
+	_uart2_config(115200);
+	_uart3_config(115200);
+	_uart4_config(115200);
+	_uart5_config(115200);
+	_uart6_config(115200);
+	_uart7_config(115200);
+	_adc_config();
+	_gpio_int_config();
+	_isp_config();
+	_swipe_led_config();
 	
 	SYS_LockReg();
 }

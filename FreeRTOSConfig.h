@@ -122,7 +122,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_RECURSIVE_MUTEXES     1			//=1时使用递归互斥信号量
 
 #define configUSE_QUEUE_SETS            1			//=1时启用队列
-#define configQUEUE_REGISTRY_SIZE       16		//=x系统队列数量+信号量数量，=0不启用队列和信号量
+#define configQUEUE_REGISTRY_SIZE       20		//=x系统队列数量+信号量数量，=0不启用队列和信号量
 
 /***************************************************************************************************************/
 /*                                FreeRTOS与内存申请有关配置选项                                                */

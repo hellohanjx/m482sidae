@@ -26,7 +26,7 @@ void sys_clock_init( void )
     CLK_SetCoreClock(FREQ_192MHZ);
 
     /* Set both PCLK0 and PCLK1 as HCLK/2 */
-    CLK->PCLKDIV = CLK_PCLKDIV_APB0DIV_DIV2 | CLK_PCLKDIV_APB1DIV_DIV2;
+    CLK->PCLKDIV = CLK_PCLKDIV_APB0DIV_DIV2 | CLK_PCLKDIV_APB1DIV_DIV2;//APB时钟分频[时钟源来自HCLK]，APB0-2分频，APB1-2分频
 
     /* Enable IP clock */
     CLK_EnableModuleClock(TMR0_MODULE);//使能计时器0时钟

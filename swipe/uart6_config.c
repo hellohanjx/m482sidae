@@ -1,16 +1,16 @@
-#include "uart6_config.h"
+#include "uart_config.h"
 #include "uart.h"
 
-static volatile UART6_DATA rx;	//接收指针
-static volatile UART6_DATA *tx;	//发送指针
-static UART6_RECV_CALLBACK callBack_recv;//接收处理回调函数
+static volatile UART_DATA rx;	//接收指针
+static volatile UART_DATA *tx;	//发送指针
+static UART_RECV_CALLBACK callBack_recv;//接收处理回调函数
 
 #define TIMER_MODE	0//0定时器模式，1FIFO超时模式
 /*
 @功能：默认回调函数
 @说明：如果没有指定回调函数，则使用默认回调函数
 */
-static void default_callback_recv(UART6_DATA *rx)
+static void default_callback_recv(UART_DATA *rx)
 {
 	SCUART_Write(SC0, (uint8_t*)"SC0 = ", sizeof("SC0 = "));
 	SCUART_Write(SC0, rx->buf, rx->len);
@@ -19,7 +19,7 @@ static void default_callback_recv(UART6_DATA *rx)
 /*
 @功能：uart6 配置，占用SC0接口
 */
-void uart6_config(void)
+void _uart6_config(uint32_t baud)
 {
 	CLK_EnableModuleClock(SC0_MODULE);//使能SC0时钟
 	CLK_SetModuleClock(SC0_MODULE, CLK_CLKSEL3_SC0SEL_HIRC, CLK_CLKDIV1_SC0(1));//设置时钟源与分频
@@ -27,7 +27,7 @@ void uart6_config(void)
   SYS->GPA_MFPL &= ~(SYS_GPA_MFPL_PA0MFP_Msk | SYS_GPA_MFPL_PA1MFP_Msk);
 	SYS->GPA_MFPL |= (SYS_GPA_MFPL_PA0MFP_SC0_CLK | SYS_GPA_MFPL_PA1MFP_SC0_DAT);
 	
-	SCUART_Open(SC0, 115200);
+	SCUART_Open(SC0, baud);
 #if TIMER_MODE == 1
 	SC0->CTL |= SC_CTL_TMRSEL_Msk;//使能定时器
 #else
@@ -59,12 +59,12 @@ void SC0_IRQHandler(void)
 		SC_StopTimer(SC0, 0);
 		if(callBack_recv != default_callback_recv)
 		{
-			callBack_recv((UART6_DATA*)&rx);
+			callBack_recv((UART_DATA*)&rx);
 			callBack_recv = default_callback_recv;//防止野指针
 		}
 		else
 		{
-			default_callback_recv((UART6_DATA*)&rx);
+			default_callback_recv((UART_DATA*)&rx);
 		}
 	}	
 	
@@ -75,7 +75,7 @@ void SC0_IRQHandler(void)
 		while(!SCUART_GET_RX_EMPTY(SC0) && n++ < 2)
 #endif
 		{
-			rx.len %= UART6_BUF_SIZE;
+			rx.len %= UART_BUF_SIZE;
 			rx.buf[rx.len++] = SCUART_READ(SC0);
 		}
 #if TIMER_MODE == 1
@@ -89,24 +89,24 @@ void SC0_IRQHandler(void)
 		SCUART_CLR_INT_FLAG(SC0,  SC_INTSTS_RXTOIF_Msk);//清标志
 		while(!SCUART_GET_RX_EMPTY(SC0))
 		{
-			rx.len %= UART6_BUF_SIZE;
+			rx.len %= UART_BUF_SIZE;
 			rx.buf[rx.len++] = SCUART_READ(SC0);
 		}
 		if(callBack_recv != default_callback_recv)
 		{
-			callBack_recv((UART6_DATA*)&rx);
+			callBack_recv((UART_DATA*)&rx);
 			callBack_recv = default_callback_recv;//防止野指针
 		}
 		else
 		{
-			default_callback_recv((UART6_DATA*)&rx);
+			default_callback_recv((UART_DATA*)&rx);
 		}
 	}
 	
 	if( SCUART_GET_INT_FLAG(SC0, SC_INTSTS_TBEIF_Msk) )//发送缓存空中断
 	{
 		SCUART_CLR_INT_FLAG(SC0,  SC_INTSTS_TBEIF_Msk);//清标志
-		tx->size %= UART6_BUF_SIZE;
+		tx->size %= UART_BUF_SIZE;
 		if(tx->size < tx->len)
 		{
 			SC0->DAT = tx->buf[tx->size++];
@@ -134,7 +134,7 @@ void SC0_IRQHandler(void)
 @返回值：操作结果
 @注意：如果发送数据很快，这里需要采用信号量锁住发送过程
 */
-uint8_t _uart6_send(UART6_DATA *pt_tx , UART6_DATA** pt_rx, UART6_RECV_CALLBACK callback)   
+uint8_t _uart6_send(UART_DATA *pt_tx , UART_DATA** pt_rx, UART_RECV_CALLBACK callback)
 {
 	if(pt_tx == 0)
 		return FALSE;
@@ -142,11 +142,13 @@ uint8_t _uart6_send(UART6_DATA *pt_tx , UART6_DATA** pt_rx, UART6_RECV_CALLBACK 
 	if(callback)
 		callBack_recv = callback;	//回调函数初始化，如果是0则此次发送不需要返回
 	
-	*pt_rx = (UART6_DATA*)&rx;
+	*pt_rx = (UART_DATA*)&rx;
 	tx = pt_tx;
 	tx->size = 0;//发送计数清0
 	rx.len = 0;//接收计数清0
-	tx->len %= UART6_BUF_SIZE;//限制发送长度
+	tx->len %= UART_BUF_SIZE;//限制发送长度
+	rx.id = tx->id;//标记数据来源，刷卡器编号0~5
+	
 	SCUART_WRITE(SC0, tx->buf[tx->size++]);
 	SCUART_ENABLE_INT(SC0, SC_INTEN_TBEIEN_Msk);//开发送缓存空中断
 	return TRUE;

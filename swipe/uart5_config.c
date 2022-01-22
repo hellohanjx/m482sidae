@@ -21,8 +21,8 @@ static void default_callback_recv(UART_DATA *rx)
 static void pdma_config(UART_DATA *rx, UART_DATA *tx)
 {
 	CLK_EnableModuleClock(PDMA_MODULE);//使能PDMA时钟
-	NVIC_SetPriority(PDMA_IRQn, 0);//中断优先级
-	NVIC_EnableIRQ(PDMA_IRQn);//打开中断
+//	NVIC_SetPriority(PDMA_IRQn, 6);//中断优先级
+//	NVIC_EnableIRQ(PDMA_IRQn);//打开中断
 	
 	if(tx != NULL)
 	{
@@ -37,7 +37,7 @@ static void pdma_config(UART_DATA *rx, UART_DATA *tx)
 		不然uart接收中断标志是 UART_INTSTS_RXTOIF_Msk/UART_INTSTS_HWTOINT_Msk
 		而不是 UART_INTSTS_RXTOINT_Msk/UART_INTSTS_RXTOIF_Msk
 		*/
-		PDMA_EnableInt(PDMA, 5, PDMA_INT_TRANS_DONE);//dma传输完成中断,@需要达到设置的接收数量才能进入此中断
+//		PDMA_EnableInt(PDMA, 5, PDMA_INT_TRANS_DONE);//dma传输完成中断,@需要达到设置的接收数量才能进入此中断
 	}
 }
 
@@ -106,6 +106,28 @@ void UART5_IRQHandler(void)
 		}
 	}
 	
+	if( UART_GET_INT_FLAG(UART5, UART_INTSTS_THREIF_Msk) )//发送缓存空中断
+	{
+		if(tx !=0 )
+		{
+			tx->size %= UART_BUF_SIZE;
+			if(tx->size < tx->len)
+			{
+				UART5->DAT = tx->buf[tx->size++];
+			}
+			else
+			{
+				UART_DISABLE_INT(UART5, UART_INTEN_THREIEN_Msk);//关发送中断
+				return;
+			}
+		}
+		else
+		{
+			UART_DISABLE_INT(UART5, UART_INTEN_THREIEN_Msk);//关发送中断
+			return;
+		}
+	}
+	
 	if( UART_GET_INT_FLAG(UART5, UART_INTSTS_HWTOIF_Msk) )//DMA时超时中断
 	{
 		while(!UART_GET_RX_EMPTY(UART5))
@@ -113,7 +135,15 @@ void UART5_IRQHandler(void)
 			rx.len %= UART_BUF_SIZE;
 			rx.buf[rx.len++] = UART5->DAT;
 		}
-		UART_Write(UART5, "G", sizeof("G"));
+		if(callBack_recv != default_callback_recv)
+		{
+			callBack_recv((UART_DATA*)&rx);//回调处理
+			callBack_recv = default_callback_recv;//防止野指针
+		}
+		else
+		{
+			default_callback_recv((UART_DATA*)&rx);
+		}
 	}
 }
 
@@ -142,10 +172,16 @@ uint8_t _uart5_send(UART_DATA *pt_tx , UART_DATA** pt_rx, UART_RECV_CALLBACK cal
 	
 	UART_DISABLE_INT(UART5, UART_INTEN_TXPDMAEN_Msk);//禁能dma发送
 	UART_DISABLE_INT(UART5, UART_INTEN_RXPDMAEN_Msk);//禁能dma接收
-		
+	
+	#if(0)	//使用发送中断
+//	UART_Write(UART5, (uint8_t*)tx->buf,tx->len);
+	UART_WRITE(UART5, tx->buf[tx->size++]);
+	UART_ENABLE_INT(UART5, UART_INTEN_THREIEN_Msk);
+	#else //使用PDMA发送
 	pdma_config(NULL, (UART_DATA*)tx);
-
 	UART_ENABLE_INT(UART5, UART_INTEN_TXPDMAEN_Msk);//使能DMA发送,DMA发送
+	#endif
+	
 //	UART_ENABLE_INT(UART5, UART_INTEN_RXPDMAEN_Msk);//使能DMA发送,DMA接收
 
 	return TRUE;

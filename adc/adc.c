@@ -7,7 +7,6 @@
 */
 void _adc_config(void)
 {
-	int32_t adc_val[2];
 	//内部温度传感器配置
   SYS->IVSCTL |= SYS_IVSCTL_VTEMPEN_Msk;//使能内部温度传感器
 	SYS_SetVRef(SYS_VREFCTL_VREF_PIN);	//Vref引脚电压来自外部管脚

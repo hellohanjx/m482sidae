@@ -136,6 +136,19 @@ void icreader_state_change(uint8_t id,	uint8_t state);
 uint8_t ireader_read(uint8_t id);
 void ireader_init(uint8_t id);
 
+//uint8_t ireader_read_1(uint8_t id);
+//void ireader_init_1(uint8_t id);
+//uint8_t ireader_read_2(uint8_t id);
+//void ireader_init_2(uint8_t id);
+//uint8_t ireader_read_3(uint8_t id);
+//void ireader_init_3(uint8_t id);
+//uint8_t ireader_read_4(uint8_t id);
+//void ireader_init_4(uint8_t id);
+//uint8_t ireader_read_5(uint8_t id);
+//void ireader_init_5(uint8_t id);
+//uint8_t ireader_read_6(uint8_t id);
+//void ireader_init_6(uint8_t id);
+
 //º¯ÊıÖ¸Õë
 typedef uint8_t(*UART_SEND)(UART_DATA *pt_tx , UART_DATA** pt_rx, UART_RECV_CALLBACK callback);
 typedef void(*UART_CONFIG)(uint32_t baud);

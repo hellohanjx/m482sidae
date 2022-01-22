@@ -14,7 +14,8 @@ enum SWITCH_MODE{SWITCH_OFF, SWITCH_ON};
 //工厂模式
 enum FACTOTY_MODE{USER_MODE, FACTORY_COLD, FACTORY_HOT, FACTORY_CLOSE_TEMP, FACTORY_CLOSE_ALL, FACTORY_AUTO, FACTORY_AUTO_COLD, FACTORY_AUTO_HOT};
 
-
+//刷卡器工作状态
+enum CARD_WORK_STATE{IDLE, BUSY, WORKING};
 
 
 /****************************************************************************************************************
@@ -40,9 +41,11 @@ typedef struct CLASS_GLOBAL
 	struct trade //交易相关
 	{
 		uint8_t type; //交易类型：0现金 1 IC卡 2 手机支付
-		uint32_t price;//价格
+		uint8_t fsm[6];//支付流程状态机
 		uint32_t number;//交易号
-		uint32_t max_price;	//最大价格
+		uint32_t min_balance;//卡最小余额
+		uint32_t plus_per_1L[6];//1L水脉冲数，最多6个刷卡器
+		uint32_t price_per_1L[6];//1L水脉价格，最多6个刷卡器
 	}trade;
 	
 	/****************
@@ -81,15 +84,22 @@ typedef struct CLASS_GLOBAL
 	}temp;
 	
 	/****************
-	@说明：卡系统，包含读卡器
+	@说明：卡系统，包含读卡器，水阀，信号
 	****************/
 	struct ireader
 	{
 		struct{//读卡设备
-			uint8_t 		state;					//读卡器使能
+			uint8_t 		state;			//刷卡器状态
 			uint8_t 		type;				//刷卡器类型
+			enum CARD_WORK_STATE work;//工作状态
 			uint32_t 		interface;	//刷卡接口
 		}equ;
+		
+		struct{//显示
+			uint32_t state;//0=无需要显示，1=需要显示
+			uint32_t start_time;//记录开始显示时间
+			uint32_t hold_time;//记录显示时间
+		}display;
 		
 		struct{//卡片
 			uint8_t user;	//用户身份识别(1管理员)
@@ -108,6 +118,21 @@ typedef struct CLASS_GLOBAL
 			uint32_t 	trade_num;		//交易号
 		}card;
 		
+		struct{
+			uint8_t state;//水阀设备状态，好/坏
+		}tap;
+		
+		struct{
+			uint8_t state;//计数状态
+			uint32_t val;//计数值
+		}count[2];//2个信号线：主信号计数，副信号计数
+		
+		struct{
+			char physic_char[CARD_PHY_LEN];	//物理卡号-字符型
+			uint32_t trade_num;						//交易号
+			uint32_t time;								//计时
+		}working;//工作备份
+		
 	}ireader[6];
 
 	
@@ -120,6 +145,7 @@ typedef struct CLASS_GLOBAL
 声明
 ****************************/
 extern volatile CLASS_GLOBAL class_global;
+extern volatile char main_version[];
 
 void restart_equ_set(uint8_t val, uint8_t type);
 uint8_t restart_equ_get(void);

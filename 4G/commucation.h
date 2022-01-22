@@ -50,6 +50,8 @@ uint8_t get_factory_set(uint8_t *str, uint8_t type);
 void instant_equipment_state(uint8_t type, uint8_t state, uint32_t value);
 void requset_card_trade(uint8_t id, uint8_t type, uint32_t trade_num);
 void report_to_communication(MAIL* mymail, uint8_t type);
+void requset_card_result(uint8_t id, uint8_t type, uint32_t trade_num, uint16_t plus_cnt, char *physic_char);
+void report_state_change(uint8_t mode, uint32_t type, uint16_t id, uint32_t state);
 
 
 

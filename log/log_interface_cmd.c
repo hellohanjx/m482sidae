@@ -8,6 +8,7 @@
 #include "stdlib.h"
 #include "isp_program.h"
 #include "log_interface_cmd.h"
+#include "4G.h"
 
 /*
 @功能：日志接收处理任务
@@ -239,6 +240,115 @@ void task_log_recv(void)
 							}
 						}
 						
+						/********************** 查询刷卡器状态 ****************************/
+						else
+						if( !strncasecmp((char*)&(rx.buf[3]), "ireader", sizeof("ireader") - 1) )//card
+						{
+							len = sizeof("ireader") + 2;
+							if(rx.buf[len] == '?')//查询机器端口
+							{
+								char tmp, i, id;
+								for(i = 0; i < IREADER_NUM_MAX; i++)
+								{
+									id = i+'1';
+									tmp = class_global.ireader[i].equ.state + '0';
+									printf("ireader_");
+									printf(&id);
+									printf("= ");
+									printf(&tmp);
+									printf("\r\n");
+								}
+							}
+							else
+							{
+								printf("No support\r\n");
+							}
+						}
+						
+						/********************** 查询4G状态 ****************************/
+						else
+						if( !strncasecmp((char*)&(rx.buf[3]), "4G", sizeof("4G") - 1) )//card
+						{
+							len = sizeof("4G") + 2;
+							if(rx.buf[len] == '?')//查询机器端口
+							{
+								tmp[sprintf(tmp, "%u", get_4g_state())] = 0;
+								printf("4G state = ");
+								printf(tmp);
+								printf("\r\n");
+							}
+							else
+							{
+								printf("No support\r\n");
+							}
+						}
+						
+						/********************** 查询sim卡ICCID ****************************/
+						else
+						if( !strncasecmp((char*)&(rx.buf[3]), "ICCID", sizeof("ICCID") - 1) )//card
+						{
+							len = sizeof("ICCID") + 2;
+							if(rx.buf[len] == '?')//查询机器端口
+							{
+								printf("ICCID = ");
+								tmp[sprintf(tmp, "%010u", class_global.sys.unique_id[0])] = 0;
+								printf(tmp);
+								tmp[sprintf(tmp, "%010u", class_global.sys.unique_id[1])] = 0;
+								printf(tmp);
+								tmp[sprintf(tmp, "%010u", class_global.sys.unique_id[2])] = 0;
+								printf(tmp);
+								printf("\r\n");
+							}
+							else
+							{
+								printf("No support\r\n");
+							}
+						}
+						
+						/********************** 查询 FSM 状态 ****************************/
+						else
+						if( !strncasecmp((char*)&(rx.buf[3]), "WORK", sizeof("WORK") - 1) )
+						{
+							len = sizeof("WORK") + 2;
+							if(rx.buf[len] == '?')//查询机器端口
+							{
+								printf("work state = ");
+								for( i = 0; i < IREADER_NUM_MAX; i++ )
+								{
+									tmp[sprintf(tmp, "%u", class_global.ireader[i].equ.work)] = 0;
+									printf(tmp);
+									printf(",");
+								}
+								printf("\r\n");
+							}
+							else
+							{
+								printf("No support\r\n");
+							}
+						}
+						
+						/********************** 查询交易状态 ****************************/
+						else
+						if( !strncasecmp((char*)&(rx.buf[3]), "TRADE", sizeof("TRADE") - 1) )
+						{
+							len = sizeof("TRADE") + 2;
+							if(rx.buf[len] == '?')//查询机器端口
+							{
+								printf("trade state = ");
+								for( i = 0; i < IREADER_NUM_MAX; i++ )
+								{
+									tmp[sprintf(tmp, "%u", class_global.trade.fsm[i])] = 0;
+									printf(tmp);
+									printf(",");
+								}
+								printf("\r\n");
+							}
+							else
+							{
+								printf("No support\r\n");
+							}
+						}
+
 						/********************** 复位 ****************************/
 						else
 						if( !strncasecmp((char*)&(rx.buf[3]), "reset", sizeof("reset") - 1) )//port

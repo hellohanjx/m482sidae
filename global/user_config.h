@@ -2,25 +2,20 @@
 #define _USER_CONFIG_H_
 
 
-#define C_4G_LOG				0	//4G日志，1=打开；0=关闭
+#define C_4G_LOG				0		//4G日志，1=打开；0=关闭
+#define GPIO_INT_LOG		0		//gpio中断日志
+#define	RC_522_LOG			0		//rc522 日志
+#define WATCH_DOG				1		//看门狗；1=开，0=关
+#define CPU_INFO				0
 
-#define GPIO_INT_LOG		0//gpio中断日志
+#define IREADER_NUM_MAX		6//刷卡器最大数量
 
-#define	RC_522_LOG			1//rc522 日志
-
-
-
-
-#define	CARD_PHY_LEN		34	//物理卡号长度(字符型)
-#define CARD_LOGIC_LEN	34	//逻辑卡号长度(字符型)
-
-#define ICCID_LEN								50		//SIM卡ICCID长度
-
-#define PACK_MAX_SIZE						255		//与平台通信最大数据长度
-
-#define IP_LEN									16		//ip地址长度
-
-#define PARAM_REDOWNED_CNT			3			//开机参数重复下载次数
+#define IP_LEN									16	//ip地址长度
+#define	CARD_PHY_LEN						34	//物理卡号长度(字符型)
+#define CARD_LOGIC_LEN					34	//逻辑卡号长度(字符型)
+#define ICCID_LEN								50	//SIM卡ICCID长度
+#define PACK_MAX_SIZE						255	//与平台通信最大数据长度
+#define PARAM_REDOWNED_CNT			3		//开机参数重复下载次数
 
 #define DEF_HEIM_IP							"116.62.120.86"//"IP.HMILK.CN"//"121.41.30.42"
 #define	DEF_CARD_INTERFACE			1001		//刷卡器接口
@@ -28,11 +23,11 @@
 /*
 @说明：flash存储器参数默认值
 */
-#define DEF_FLASH_Ip						(116 << 24) | (62 << 16) | (120 << 8) | 86	//默认IP地址,是4个ip段拼起来的，左~右，即是 116.62.120.86
-#define DEF_FLASH_Id						1000000000	//机器编号(10位)
-#define DEF_FLASH_Port					8001				//默认端口号
+//#define DEF_FLASH_Ip						(116 << 24) | (62 << 16) | (120 << 8) | 86	//默认IP地址,是4个ip段拼起来的，左~右，即是 116.62.120.86
+//#define DEF_FLASH_Id						1000000000	//机器编号(10位)
+//#define DEF_FLASH_Port					8001				//默认端口号
 #define DEF_FLASH_PassWord			000000			//联网密码(6位)
-#define DEF_FLASH_FactoryEn			1						//默认工厂模式-自动测试：0用户模式，;1:工厂模式
+#define DEF_FLASH_FactoryEn			0						//默认工厂模式-自动测试：0用户模式，;1:工厂模式
 #define DEF_FLASH_PointBit			2						//金额的小数点位数
 #define DEF_FLASH_PriceBit			4						//金额位数(不包含小数点)
 #define DEF_FLASH_CardType			1						//1=黑莓刷卡器；2=外购刷卡器
@@ -40,6 +35,9 @@
 
 
 
+#define DEF_FLASH_Ip						(121 << 24) | (43 << 16) | (255 << 8) | 207	//默认IP地址,是4个ip段拼起来的，左~右，即是 116.62.120.86
+#define DEF_FLASH_Port					5008				//默认端口号
+#define DEF_FLASH_Id						1059000000	//机器编号(10位)
 
 
 

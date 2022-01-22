@@ -9,6 +9,9 @@
 #include "gpio_int.h"
 #include "isp_program.h"
 #include "swipe_led.h"
+#include "12864_driver.h"
+#include "delay.h"
+#include "key.h"
 
 /*
 @功能：所有引脚初始化
@@ -56,6 +59,7 @@ void hardware_config(void)
 {
 	SYS_UnlockReg();//解锁寄存器
 	
+	_delay_init();
 	_pin_config();
 	_led_config();
 	_tap_config();
@@ -66,12 +70,14 @@ void hardware_config(void)
 	_uart3_config(115200);
 	_uart4_config(115200);
 	_uart5_config(115200);
-	_uart6_config(115200);
+//	_uart6_config(115200);//@@@注意：这里不能初始化，不然接读卡头大概率出错
 	_uart7_config(115200);
 	_adc_config();
 	_gpio_int_config();
 	_isp_config();
 	_swipe_led_config();
+	_lcd_config();
+	_key_config();
 	
 	SYS_LockReg();
 }

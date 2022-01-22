@@ -3,6 +3,12 @@
 
 #include "stdint.h"
 
+//卡系统消息类型
+enum{
+	MsgCard_GetCard,//找到卡
+	MsgCard_LostCard,//丢失卡
+};
+
 
 void task_swipe1(void);
 void task_swipe2(void);

@@ -19,9 +19,10 @@ static uint8_t callback_online_cardPay(uint8_t *recv, uint16_t len, uint8_t*send
 		chk += recv[i];
 	if(chk == recv[recv[2] - 1])
 	{
-		IREADER_MSG msg;
+		FSM_MSG msg;
 		msg.id = id;//发送数据来源
-		msg.type = ONLINE_CARD_PAY_CMD;	//表示支付申请
+		msg.type = MsgCardServerAck;		//表示在线卡
+		msg.stype = ONLINE_CARD_PAY_CMD;//表示支付申请
 		msg.value = 0x50;								//表示超时未回复
 		
 		if(recv[0] == 0x1D && recv[1] == send[1])//包头与序号正确
@@ -66,7 +67,7 @@ static uint8_t callback_online_cardPay(uint8_t *recv, uint16_t len, uint8_t*send
 			}
 			rs =  TRUE;
 		}
-		ireader_queue_send[id](msg);//消息发送到队列
+		fsm_queue_send(msg);//消息发送到队列
 	}
 	else//校验错
 	{
@@ -90,9 +91,10 @@ static uint8_t callback_online_cardCheck(uint8_t *recv, uint16_t len, uint8_t*se
 		chk += recv[i];
 	if(chk == recv[recv[2] - 1])
 	{
-		IREADER_MSG msg;
+		FSM_MSG msg;
 		msg.id = id;
-		msg.type = ONLINE_CARD_CHECK_CMD;		//表示查询申请
+		msg.type = MsgCardServerAck;//表示在线卡
+		msg.stype = ONLINE_CARD_CHECK_CMD;//表示查询
 		msg.value = 0x50;		//表示超时未回复
 		
 		if(recv[0] == 0x1D && recv[1] == send[1])//包头与序号正确
@@ -137,7 +139,7 @@ static uint8_t callback_online_cardCheck(uint8_t *recv, uint16_t len, uint8_t*se
 			}
 			rs =  TRUE;
 		}
-		ireader_queue_send[id](msg);//消息发送到队列
+		fsm_queue_send(msg);//消息发送到队列
 		}
 	else//校验错
 	{
@@ -223,13 +225,13 @@ void requset_card_trade(uint8_t id, uint8_t type, uint32_t trade_num)
 	str[i++] = '*';
 	
 	//货道号【用刷卡器id】
-	len = sprintf(tmp, "%02u", id);
+	len = sprintf(tmp, "%02u", id+1);
 	for(j = 0; j < len; j++)
 		str[i++] = tmp[j];
 	str[i++] = '*';
 	
 	//价格【用交易价格】
-	len = sprintf(tmp,"%u",class_global.trade.price);
+	len = sprintf(tmp,"%u",class_global.trade.price_per_1L[id]);
 	for(j=0;j<len;j++)
 	str[i++] = tmp[j];
 	str[i++] = '*';
@@ -267,8 +269,11 @@ void requset_card_trade(uint8_t id, uint8_t type, uint32_t trade_num)
 @参数：id，刷卡器id
 			 type：0x34：刷卡失败；0x33：刷卡成功
 			 trade_num：交易号
+			 plus_cnt：出水脉冲
+			 physic_char：卡号缓冲指针
+				
 */
-void requset_card_result(uint8_t id, uint8_t type, uint32_t trade_num)
+void requset_card_result(uint8_t id, uint8_t type, uint32_t trade_num, uint16_t plus_cnt, char *physic_char)
 {
 	uint8_t i,j;
 	char tmp[10],len;
@@ -320,20 +325,20 @@ void requset_card_result(uint8_t id, uint8_t type, uint32_t trade_num)
 	str[i++]= '*';
 	
 	//物理卡号
-	for(j = 0; j < 50 && class_global.ireader[id].card.physic_char[j] != 0; j++)
+	for(j = 0; j < 50 && physic_char[j] != 0; j++)
 	{
-		str[i++]= class_global.ireader[id].card.physic_char[j];
+		str[i++]= physic_char[j];
 	}
 	str[i++] = '*';
 	
 	//货道号【用刷卡器id】
-	len = sprintf(tmp, "%02u", id);
+	len = sprintf(tmp, "%02u", id+1);
 	for(j = 0; j < len; j++)
 		str[i++] = tmp[j];
 	str[i++] = '*';
 	
-	//价格【用交易价格】
-	len = sprintf(tmp,"%u",class_global.trade.price);
+	//脉冲数
+	len = sprintf(tmp,"%u",plus_cnt);
 	for(j=0;j<len;j++)
 		str[i++] = tmp[j];
 	str[i++] = '*';

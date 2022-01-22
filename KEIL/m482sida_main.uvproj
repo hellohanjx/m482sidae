@@ -376,7 +376,7 @@
               <MiscControls></MiscControls>
               <Define>RVDS_ARMCM4_NUC4xx</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Device\Nuvoton\M480\Include;..\Device\Nuvoton\M480\Source\ARM;..\Device\Nuvoton\M480\Source\GCC;..\Device\Nuvoton\M480\Source\IAR;..\Device;..\Device\Nuvoton;..\Device\Nuvoton\M480;..\FreeRTOS\Source\include;..\FreeRTOS;..\..\m482sidae;..\StdDriver\src;..\StdDriver\inc;..\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\FreeRTOS\Demo\Common\include;..\hardware;..\4G;..\swipe;..\global;..\rtc;..\adc;..\control;..\log</IncludePath>
+              <IncludePath>..\Device\Nuvoton\M480\Include;..\Device\Nuvoton\M480\Source\ARM;..\Device\Nuvoton\M480\Source\GCC;..\Device\Nuvoton\M480\Source\IAR;..\Device;..\Device\Nuvoton;..\Device\Nuvoton\M480;..\FreeRTOS\Source\include;..\FreeRTOS;..\..\m482sidae;..\StdDriver\src;..\StdDriver\inc;..\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\FreeRTOS\Demo\Common\include;..\hardware;..\4G;..\swipe;..\global;..\rtc;..\adc;..\control;..\log;..\12864_serial_zk;..\qr_code</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -525,6 +525,16 @@
               <FileType>1</FileType>
               <FilePath>..\StdDriver\src\fmc.c</FilePath>
             </File>
+            <File>
+              <FileName>wdt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\StdDriver\src\wdt.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\StdDriver\src\timer.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -541,11 +551,6 @@
               <FilePath>..\hardware\led_gpio.c</FilePath>
             </File>
             <File>
-              <FileName>tap_set.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\hardware\tap_set.c</FilePath>
-            </File>
-            <File>
               <FileName>sys_clock.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\hardware\sys_clock.c</FilePath>
@@ -559,6 +564,21 @@
               <FileName>isp_program.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\hardware\isp_program.c</FilePath>
+            </File>
+            <File>
+              <FileName>wacth_dog.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\hardware\wacth_dog.c</FilePath>
+            </File>
+            <File>
+              <FileName>delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\hardware\delay.c</FilePath>
+            </File>
+            <File>
+              <FileName>key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\hardware\key.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -594,6 +614,11 @@
               <FileName>pack_onlink_trade.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\4G\pack_onlink_trade.c</FilePath>
+            </File>
+            <File>
+              <FileName>pack_state_changge.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\4G\pack_state_changge.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -671,9 +696,19 @@
               <FilePath>..\global\hook.c</FilePath>
             </File>
             <File>
+              <FileName>fsm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\global\fsm.c</FilePath>
+            </File>
+            <File>
               <FileName>user_config.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\global\user_config.h</FilePath>
+            </File>
+            <File>
+              <FileName>readme.txt</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\global\readme.txt</FilePath>
             </File>
           </Files>
         </Group>
@@ -706,6 +741,11 @@
           <GroupName>control</GroupName>
           <Files>
             <File>
+              <FileName>tap_set.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\hardware\tap_set.c</FilePath>
+            </File>
+            <File>
               <FileName>epwm_driver.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\control\epwm_driver.c</FilePath>
@@ -734,6 +774,36 @@
               <FileName>log_interface_cmd.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\log\log_interface_cmd.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>12864_serial_zk</GroupName>
+          <Files>
+            <File>
+              <FileName>12864_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\12864_serial_zk\12864_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>display.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\12864_serial_zk\display.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>qr_code</GroupName>
+          <Files>
+            <File>
+              <FileName>QR_Encode.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\qr_code\QR_Encode.c</FilePath>
+            </File>
+            <File>
+              <FileName>QRCODE_business_layer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\qr_code\QRCODE_business_layer.c</FilePath>
             </File>
           </Files>
         </Group>

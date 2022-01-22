@@ -1,5 +1,4 @@
 #include "uart_config.h"
-#include "uart.h"
 
 static volatile UART_DATA rx;	//接收指针
 static volatile UART_DATA *tx;	//发送指针
@@ -21,6 +20,11 @@ static void default_callback_recv(UART_DATA *rx)
 */
 void _uart6_config(uint32_t baud)
 {
+//	SC0->INTEN = 0;
+//	NVIC_DisableIRQ(SC0_IRQn);
+//	SCUART_Close(SC0);
+//	CLK_DisableModuleClock(SC0_MODULE);//禁能能SC0时钟
+	
 	CLK_EnableModuleClock(SC0_MODULE);//使能SC0时钟
 	CLK_SetModuleClock(SC0_MODULE, CLK_CLKSEL3_SC0SEL_HIRC, CLK_CLKDIV1_SC0(1));//设置时钟源与分频
 	
@@ -28,19 +32,26 @@ void _uart6_config(uint32_t baud)
 	SYS->GPA_MFPL |= (SYS_GPA_MFPL_PA0MFP_SC0_CLK | SYS_GPA_MFPL_PA1MFP_SC0_DAT);
 	
 	SCUART_Open(SC0, baud);
+//	SCUART_SetLineConfig(SC0, baud, SCUART_CHAR_LEN_8, SCUART_PARITY_NONE, SCUART_STOP_BIT_1);
+	
 #if TIMER_MODE == 1
 	SC0->CTL |= SC_CTL_TMRSEL_Msk;//使能定时器
 #else
 	SC0->CTL |= (0x2 << 6);//(SC_CTL_RXTRGLV_Msk);//RX-FIFO:3字节触发
-	SCUART_SetTimeoutCnt(SC0, 3);
+	SCUART_SetTimeoutCnt(SC0, 20);
 #endif
 	
-	NVIC_SetPriority(SC0_IRQn, 6);
+	NVIC_SetPriority(SC0_IRQn, 5);
 	NVIC_EnableIRQ(SC0_IRQn);
+
 #if TIMER_MODE == 1
 	SCUART_ENABLE_INT(SC0, SC_INTEN_RDAIEN_Msk | SC_INTEN_TMR0IEN_Msk);//使能接收中断 | 定时器0中断
 #else	
+//		SCUART_CLR_INT_FLAG(SC0, SC_INTSTS_RXTOIF_Msk);//清标志
+//		SCUART_CLR_INT_FLAG(SC0, SC_INTSTS_TBEIF_Msk);//清标志
+//		SCUART_CLR_INT_FLAG(SC0, SC_INTSTS_TERRIF_Msk);//清标志
 	SCUART_ENABLE_INT(SC0, SC_INTEN_RDAIEN_Msk | SC_INTEN_RXTOIEN_Msk);//使能接收中断 | FIFO接收超时中断
+	
 #endif
 
 	callBack_recv = default_callback_recv;//初始化回调函数
@@ -51,7 +62,7 @@ void _uart6_config(uint32_t baud)
 */
 void SC0_IRQHandler(void)
 {
-	if( SC0->INTSTS & SC_INTSTS_TMR0IF_Msk )
+	if( SC0->INTSTS & SC_INTSTS_TMR0IF_Msk )//定时器中断
 	{
 		SC0->INTSTS = SC_INTSTS_TMR0IF_Msk;
 //		SC_DISABLE_INT(SC0, SC_INTEN_TMR0IEN_Msk);//关闭定时器0中断
@@ -106,10 +117,18 @@ void SC0_IRQHandler(void)
 	if( SCUART_GET_INT_FLAG(SC0, SC_INTSTS_TBEIF_Msk) )//发送缓存空中断
 	{
 		SCUART_CLR_INT_FLAG(SC0,  SC_INTSTS_TBEIF_Msk);//清标志
-		tx->size %= UART_BUF_SIZE;
-		if(tx->size < tx->len)
+		if(tx !=0 )
 		{
-			SC0->DAT = tx->buf[tx->size++];
+			tx->size %= UART_BUF_SIZE;
+			if(tx->size < tx->len)
+			{
+				SC0->DAT = tx->buf[tx->size++];
+			}
+			else
+			{
+				SCUART_DISABLE_INT(SC0, SC_INTEN_TBEIEN_Msk);//关发送中断
+				return;
+			}
 		}
 		else
 		{
@@ -120,7 +139,12 @@ void SC0_IRQHandler(void)
 	
 	if( SCUART_GET_INT_FLAG(SC0, SC_INTSTS_TERRIF_Msk) )//传输错误中断
 	{
-		SCUART_CLR_INT_FLAG(SC0,  SC_INTSTS_TERRIF_Msk);//清标志
+//		uint32_t status = SC0->STATUS;	//读取异常状态值
+		SCUART_CLR_INT_FLAG(SC0, SC_INTSTS_TERRIF_Msk);//清标志
+//		printf("sc0 transmit err\r\n");
+//		SCUART_DISABLE_INT(SC0, SC_INTSTS_TERRIF_Msk);
+//								__set_FAULTMASK(1);
+//								NVIC_SystemReset();
 	}
 }
 
@@ -149,7 +173,12 @@ uint8_t _uart6_send(UART_DATA *pt_tx , UART_DATA** pt_rx, UART_RECV_CALLBACK cal
 	tx->len %= UART_BUF_SIZE;//限制发送长度
 	rx.id = tx->id;//标记数据来源，刷卡器编号0~5
 	
+	#if(0)
+	SCUART_Write(SC0, (uint8_t*)tx->buf, tx->len);
+	#else
 	SCUART_WRITE(SC0, tx->buf[tx->size++]);
 	SCUART_ENABLE_INT(SC0, SC_INTEN_TBEIEN_Msk);//开发送缓存空中断
+	#endif
+	
 	return TRUE;
 }

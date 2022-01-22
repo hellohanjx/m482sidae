@@ -158,49 +158,19 @@ static uint8_t send_restart(void)
 				if(pt_rx->buf[9] == 0x31)//有设置需要更改
 				{
 					//@新的方案=第9字节机器类型，后面是电机信号
-					
-					uint8_t tmp;
-					
-					if(pt_rx->buf[10] >=  '0' && pt_rx->buf[10] <= '9')
-					{
-						tmp = pt_rx->buf[10] - '0';
-					}
-					else
-					if(pt_rx->buf[10] >=  'A' && pt_rx->buf[10] <= 'Z')
-					{
-						tmp = pt_rx->buf[10] - 'A' + 10;
-					}
 					//设置机型					
-					tmp = pt_rx->buf[11] - '0';
 					//屏幕类型(目前只有2类)
-					tmp = pt_rx->buf[12] - '0';
 					//光检类型(目前只有2类光检)
-					tmp = pt_rx->buf[13] - '0';
 					//刷卡器类型(目前只有2类)
 					
-					rs = 1;//重启机器，更新了参数
+					rs = 1;//重启机器，更新了参数@@@这里需要在状态机中来发起重启
 					printf("restart and updata\r\n\r\n");
 				}
 				else
 				if(pt_rx->buf[9] == 0x32)//新方式-参数修改
 				{
-					uint8_t tmp;
-					
-					if(pt_rx->buf[10] != '0')//机型，0字符不修改机型
-					{
-						if(pt_rx->buf[10] >=  '1' && pt_rx->buf[10] <= '9')
-						{
-							tmp = pt_rx->buf[10] - '0' - 1;
-						}
-						else
-						if(pt_rx->buf[10] >=  'A' && pt_rx->buf[10] <= 'Z')
-						{
-							tmp = pt_rx->buf[10] - 'A' + 9;
-						}
-						//设置机型
-					}
-					
-					tmp = (pt_rx->buf[11] - '0')*100 + (pt_rx->buf[12] - '0')*10 + (pt_rx->buf[13] - '0');//电机信号
+					//设置机型
+					//电机信号
 				}
 				else
 				{
@@ -232,7 +202,7 @@ static uint8_t send_restart(void)
 /*
 @功能：开机获取参数
 */
-static uint8_t get_param(uint8_t *str, UART7_DATA *rx)
+static uint8_t judge_param(uint8_t *str, UART7_DATA *rx)
 {
 	uint8_t rs = TRUE;
 	uint8_t err;
@@ -317,6 +287,7 @@ static void send_linking(uint8_t* first, uint32_t *correct, uint8_t *redownload)
 	uint8_t download_result;
 	UART7_DATA *rx;//接收数据指针
 	
+//	while( communication_sem_get(1) && i++ < 100);//清除信号量
 	cmail = mail_apply(PACK_MAX_SIZE);//申请数据空间
 	configASSERT(cmail);
 	if(cmail != 0)
@@ -362,7 +333,7 @@ static void send_linking(uint8_t* first, uint32_t *correct, uint8_t *redownload)
 					if(*first)//上电第一次联机
 					{
 						do{
-							download_result = get_param(str, rx );
+							download_result = judge_param(str, rx );
 						}while( (download_result != TRUE) && ((*redownload)++ < PARAM_REDOWNED_CNT) );
 						
 						if( !download_result )//下载数据错误
@@ -623,18 +594,15 @@ static uint8_t send_instant_data(void)
 			}
 			else//无应答掉线
 			{
-//				FSM_MSG* msg = msg_applay(MSG_SIZE_DEFAULT);
-//				configASSERT(msg);
-//				msg->type = MsgServerAckErr;//数据错
-//				msg->stype = 1;	//掉线
-//				msg->value = 1;	//即时包
-//				if(fsm_cmd_send(TASK_MSG, msg) != pdPASS){
-//					msg_release(msg);
-//					printf("err-> ram data no answer\r\n\r\n");
-//				}
-//				class_global.net.state = 0;
-//				rs = 2;//掉线
-//				
+				FSM_MSG msg;
+				msg.id = cmail->id;
+				msg.type = MsgServerAckErr;//数据错
+				msg.stype = 1;	//掉线
+				msg.value = 1;	//即时包
+				fsm_queue_send(msg);
+				class_global.net.state = 0;
+				rs = 2;//掉线
+				
 //				server_err_save(0, cmail->addr);
 			}
 		}
@@ -698,20 +666,15 @@ static uint8_t send_report_data(void)
 			}
 			else//平台无应答
 			{
-//				FSM_MSG* msg = 0;
-//				class_global.net.state = 0;
-//				report_to_communication(cmail, TRUE);//加到队列头
+				FSM_MSG msg;
+				class_global.net.state = 0;
+				report_to_communication(cmail, TRUE);//加到队列头
 //				server_err_save(0, cmail->addr);//记录无应答数据
-//				
-//				msg = msg_applay(MSG_SIZE_DEFAULT);
-//				configASSERT(msg);
-//				msg->type = MsgServerAckErr;//数据错
-//				msg->stype = 1;	//掉线
-//				msg->value = 0;	//汇报包
-//				if(fsm_cmd_send(TASK_MSG, msg) != pdPASS){
-//					msg_release(msg);
-//					printf("err-> ram data no answer\r\n\r\n");
-//				}
+				msg.id = cmail->id;
+				msg.type = MsgServerAckErr;//数据错
+				msg.stype = 1;	//掉线
+				msg.value = 0;	//汇报包
+				fsm_queue_send(msg);
 			}
 		}
 		else//有积压计数，但是无积压数据

@@ -6,6 +6,7 @@
 #include "4G.h"
 #include "user_rtc.h"
 #include "stdlib.h"
+#include "isp_program.h"
 
 
 //注：结构分隔符 * ; 包体内分隔符 '+'
@@ -159,7 +160,7 @@ void get_channel_status( uint8_t* str)
 			str[i++] = tmp[j]; 
 			str[i++] = '*';
 			//货道/托盘销售价格
-			len = sprintf(tmp, "%u", class_global.trade .price );
+			len = sprintf(tmp, "%u", 0);
 			for(j = 0;j < len;j++)
 			str[i++] = tmp[j];
 			str[i++] = '*';
@@ -299,7 +300,6 @@ void get_machine_status( uint8_t* str)
 void get_software_version( uint8_t* str)
 {
 	uint8_t i,j;
-	uint32_t cpu_id[3];
 	char tmp[10];
 	
 	i = 0;
@@ -331,20 +331,17 @@ void get_software_version( uint8_t* str)
 	str[i++] = '*';//分隔符
 	
 	//3.CPU id
-	cpu_id[0]=1;//*(__IO uint32_t*)(0x1fff7a10);
-	cpu_id[1]=2;//*(__IO uint32_t*)(0x1fff7a14);
-	cpu_id[2]=3;//*(__IO uint32_t*)(0x1fff7a18);
-	sprintf(tmp, "%010u", cpu_id[0]);
+	sprintf(tmp, "%010u", class_global.sys.unique_id[0]);
 	for(j = 0; j < 10; j++)
 	{
 		str[i++] = tmp[j];
 	}
-	sprintf(tmp, "%010u", cpu_id[1]);
+	sprintf(tmp, "%010u", class_global.sys.unique_id[1]);
 	for(j = 0; j < 10; j++)
 	{
 		str[i++] = tmp[j];
 	}
-	sprintf(tmp, "%010u", cpu_id[2]);
+	sprintf(tmp, "%010u", class_global.sys.unique_id[2]);
 	for(j = 0; j < 10; j++)
 	{
 		str[i++] = tmp[j];
@@ -472,16 +469,16 @@ uint8_t analysis_17_42_7(uint8_t *buf, uint8_t len)
 	}
 	
 	/**************** 工厂模式 ****************/
-//	if( flash_param_get(FLASH_LIST_FactoryEn, FLASH_ADDR_FactoryEn, FLASH_SIZE_FactoryEn) != buf[7] - '0')
-//	{
-//		if(	flash_param_set(FLASH_LIST_FactoryEn, FLASH_ADDR_FactoryEn, FLASH_SIZE_FactoryEn, ( ( buf[7] - '0') ? 1:0) ) )//写flash
-//		{
-//			if(buf[7] - '0')
-//				class_global.sys.factory_en = FACTORY_AUTO;//更新工厂模式
-//		}
-//		else
-//			printf("17_42_7 factory set err\r\n\r\n");
-//	}
+	if( flash_param_get(FLASH_LIST_FactoryEn, FLASH_ADDR_FactoryEn) != buf[7] - '0')
+	{
+		if(	flash_param_set(FLASH_LIST_FactoryEn, FLASH_ADDR_FactoryEn, ( ( buf[7] - '0') ? 1:0) ) )//写flash
+		{
+			if(buf[7] - '0')
+				class_global.sys.factory_en = FACTORY_AUTO;//更新工厂模式
+		}
+		else
+			printf("17_42_7 factory set err\r\n\r\n");
+	}
 	
 	/**************** 层数 ****************/
 //	if( !(buf[8] - '0' > MAX_LAYER_SIZE) )//不超过定义的最大层数
@@ -532,10 +529,10 @@ uint8_t analysis_17_42_7(uint8_t *buf, uint8_t len)
 		fac /= 10;
 	}
 	
-	/**************** 最大价格 ****************/
-	for(i = 0, fac = 100000, class_global.trade.max_price = 0; i < 6; i++)
+	/**************** 最小卡余额 ****************/
+	for(i = 0, fac = 100000, class_global.trade.min_balance = 0; i < 6; i++)
 	{
-		class_global.trade.max_price += (buf[30 + i] - '0')*fac;
+		class_global.trade.min_balance += (buf[30 + i] - '0')*fac;
 		fac /= 10;
 	}
 	
@@ -621,6 +618,50 @@ uint8_t analysis_17_42_8(uint8_t *buf, uint8_t len)
 */
 uint8_t analysis_17_42_9(uint8_t *buf, uint8_t len)
 {
+	uint8_t i, j, n, layer = buf[6] - '0';
+	uint32_t fac;
+
+	if(buf[3] != '0')
+	{
+		printf("17_42_9 err_1\r\n\r\n");
+		return FALSE;
+	}
+	if(buf[4] != '9')
+	{
+		printf("17_42_9 err_2\r\n\r\n");
+		return FALSE;
+	}
+	if(layer > 6)
+		printf("17_42_9 layer num is too long\r\n\r\n");
+	
+	n = 7;
+	for(i = 0; ( (i < layer) && (i < 8) ) ; i++)
+	{
+		/**************** @@@这里不解析 ****************/
+		for(j = 0; j < 6; j++, n++)
+		{
+		}
+		
+		/**************** 最小卡余额 ****************/
+		for(j = 0, fac = 100000, class_global.trade.price_per_1L[i] = 0; j < 6; j++, n++)
+		{
+			class_global.trade.price_per_1L[i] += (buf[n] - '0') *fac;
+			fac /= 10;
+		}
+		
+		/**************** 每升水脉冲数 ****************/
+		for(j = 0, fac = 10, class_global.trade.plus_per_1L[i] = 0; j < 2; j++, n++)
+		{
+			class_global.trade.plus_per_1L[i] += (buf[n] - '0') *fac;
+			fac /= 10;
+		}
+		
+		/**************** @@@这里不解析 ****************/
+		for(j = 0; j < 2; j++, n++)
+		{
+		}
+	}
+	
 	return TRUE;
 }
 

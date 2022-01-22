@@ -18,7 +18,9 @@
 #include "led_gpio.h"
 #include "log_interface_cmd.h"
 #include "task_swipe.h"
-
+#include "fsm.h"
+#include "wacth_dog.h"
+#include "key.h"
 
 
 #define START_TASK_PRIO		1			//任务优先级
@@ -26,15 +28,10 @@
 TaskHandle_t START_Task_Handler;	//任务句柄
 static void start_task( void *pvParameters );
 
-#define communication_TASK_PRIO		23		//任务优先级
-#define communication_STK_SIZE 		512		//任务堆栈大小
+#define communication_TASK_PRIO		27		//任务优先级
+#define COMMUNICATION_STK_SIZE 		512		//任务堆栈大小
 TaskHandle_t communication_Task_Handler;		//任务句柄
 static void communication_task( void *pvParameters );
-
-#define TEST_TASK_PRIO		10		//任务优先级
-#define TEST_STK_SIZE 		256		//任务堆栈大小
-TaskHandle_t Test_Task_Handler;		//任务句柄
-static void test_task( void *pvParameters );
 
 #define IDLE_TASK_PRIO		15		//任务优先级
 #define IDLE_STK_SIZE 		256		//任务堆栈大小
@@ -76,15 +73,26 @@ static void swipe_5_task( void *pvParameters );
 TaskHandle_t Swipe_6_Task_Handler;		//任务句柄
 static void swipe_6_task( void *pvParameters );
 
+#define KEY_TASK_PRIO		20		//任务优先级
+#define KEY_STK_SIZE 		256		//任务堆栈大小
+TaskHandle_t Key_Task_Handler;		//任务句柄
+static void key_task( void *pvParameters );
+
+#define FSM_TASK_PRIO		26		//任务优先级
+#define FSM_STK_SIZE 		512		//任务堆栈大小
+TaskHandle_t Fsm_Task_Handler;		//任务句柄
+static void fsm_task( void *pvParameters );
+
+
+
 /*
 @功能：内存测试
 @参数：start,起始地址，stop结束地址
 */
-	uint8_t n;
-	uint32_t start_s;
-
 static void memory_test(uint32_t start, uint32_t stop)
 {
+	uint8_t n;
+	uint32_t start_s;
 	while(start < stop)
 	{
 		(*(__IO uint8_t *)(start)) = n;
@@ -113,6 +121,10 @@ int main(void)
 *******************************************************************/
 static void start_task( void *pvParameters )
 {
+	
+#if(WATCH_DOG)
+	watch_dog_init();
+#endif
 	msg_init();
 	hardware_config();//外设配置
 	global_init();
@@ -120,11 +132,13 @@ static void start_task( void *pvParameters )
 	
 	taskENTER_CRITICAL();//进入临界区
 
-	xTaskCreate( idle_task, 					"idle", 				IDLE_STK_SIZE, 					NULL, 	IDLE_TASK_PRIO, 					&Idle_Task_Handler );//创建空闲任务
-	xTaskCreate( communication_task, 	"communication", 	communication_STK_SIZE, 	NULL, 	communication_TASK_PRIO, 		&communication_Task_Handler );//创建通信任务
-	xTaskCreate( log_task, 						"log", 					LOG_STK_SIZE, 					NULL, 	LOG_TASK_PRIO, 						&Log_Task_Handler );//日志任务
-	
-	//刷卡器任务1~6
+	xTaskCreate( idle_task, 					"idle", 					IDLE_STK_SIZE, 						NULL, 	IDLE_TASK_PRIO, 					&Idle_Task_Handler );//创建空闲任务
+	xTaskCreate( communication_task, 	"communication", 	COMMUNICATION_STK_SIZE, 	NULL, 	communication_TASK_PRIO, 	&communication_Task_Handler );//创建通信任务
+	xTaskCreate( fsm_task, 						"fsm_1", 					FSM_STK_SIZE, 						NULL, 	FSM_TASK_PRIO, 						&Fsm_Task_Handler );//状态机任务
+	xTaskCreate( log_task, 						"log", 						LOG_STK_SIZE, 						NULL, 	LOG_TASK_PRIO, 						&Log_Task_Handler );//日志任务
+	xTaskCreate( key_task, 					  "key", 						KEY_STK_SIZE, 						NULL, 	KEY_TASK_PRIO, 						&Key_Task_Handler );//创建按键任务
+
+//刷卡器任务1~6
 	xTaskCreate( swipe_1_task, 						"swip_1", 			SWIPE_1_STK_SIZE, 			NULL, 	SWIPE_1_TASK_PRIO, 						&Swipe_1_Task_Handler );
 	xTaskCreate( swipe_2_task, 						"swip_2", 			SWIPE_2_STK_SIZE, 			NULL, 	SWIPE_2_TASK_PRIO, 						&Swipe_2_Task_Handler );
 	xTaskCreate( swipe_3_task, 						"swip_3", 			SWIPE_3_STK_SIZE, 			NULL, 	SWIPE_3_TASK_PRIO, 						&Swipe_3_Task_Handler );
@@ -132,15 +146,7 @@ static void start_task( void *pvParameters )
 	xTaskCreate( swipe_5_task, 						"swip_5", 			SWIPE_5_STK_SIZE, 			NULL, 	SWIPE_5_TASK_PRIO, 						&Swipe_5_Task_Handler );
 	xTaskCreate( swipe_6_task, 						"swip_6", 			SWIPE_6_STK_SIZE, 			NULL, 	SWIPE_6_TASK_PRIO, 						&Swipe_6_Task_Handler );
 	
-	
-	
-//	xTaskCreate( test_task, 					"test", 				TEST_STK_SIZE, 					NULL, 	TEST_TASK_PRIO, 					&Test_Task_Handler );//创建测试任务
-
-	
-//	vStartPolledQueueTasks( mainQUEUE_POLL_PRIORITY );//创建队列
-	
 	printf("FreeRTOS is starting ...\n");
-	
 	vTaskDelete(START_Task_Handler); //删除开始任务
 	taskEXIT_CRITICAL();            //退出临界区
 }
@@ -152,24 +158,32 @@ static void idle_task( void *pvParameters )
 {
 	uint8_t state = FALSE;
 	portTickType xLastExecutionTime;
-	char show_buf[500];
 	uint32_t temp_time = 0;
 	xLastExecutionTime = xTaskGetTickCount();
+	
+	#if(CPU_INFO)
+	char show_buf[500];
+	#endif
 
 	for( ;; )
 	{
-		#if(0)
+		#if(CPU_INFO)
 		vTaskList(show_buf);
 		printf("任务名      任务状态 优先级 剩余栈 任务序号\r\n");
 		printf("%s\r\n", show_buf);
 		printf("\r\n");
 		#endif
 		
-		if(class_global.net.state == 1)
-		{
+		watch_dog_feed();//喂狗
+		
+		//网络指示灯
+		if(class_global.net.state == 1){
 			LED_NET = 0;
+		}else{
+			LED_NET = 1;
 		}
 		
+		//呼吸灯
 		LED_BREATH = state;
 		state = !state;
 		
@@ -207,6 +221,23 @@ static void log_task( void *pvParameters )
 }
 
 /*******************************************************************
+@状态机任务
+*******************************************************************/
+static void fsm_task( void *pvParameters )
+{
+	task_fsm();
+}
+
+
+/*******************************************************************
+@键盘任务
+*******************************************************************/
+static void key_task( void *pvParameters )
+{
+	task_key();
+}
+
+/*******************************************************************
 @刷卡器任务
 *******************************************************************/
 static void swipe_1_task( void *pvParameters )
@@ -232,97 +263,5 @@ static void swipe_5_task( void *pvParameters )
 static void swipe_6_task( void *pvParameters )
 {
 	task_swipe6();
-}
-
-
-/*******************************************************************
-@测试任务
-*******************************************************************/
-#include "uart_config.h"
-
-
-	UART_DATA tx1, *rx1;
-	UART_DATA tx6, *rx6;
-	UART_DATA tx2, *rx2;
-	UART_DATA tx3, *rx3;
-	UART_DATA tx4, *rx4;
-	UART_DATA tx5, *rx5;
-
-static void test_task( void *pvParameters )
-{
-	char tmp[10];
-	CUR_TIME time;
-	for(;;)
-	{
-		uint8_t n;
-
-		tx1.len = 0;
-		tx6.len = 0;
-		tx2.len = 0;
-		tx3.len = 0;
-		tx4.len = 0;
-		tx5.len = 0;
-		
-		for(n = 0; n < 26; n++)
-		{
-			tx1.buf[tx1.len++] = 'a'+n;
-			tx6.buf[tx6.len++] = 'a'+n;
-			tx2.buf[tx2.len++] = 'a'+n;
-			tx3.buf[tx3.len++] = 'a'+n;
-			tx4.buf[tx4.len++] = 'a'+n;
-			tx5.buf[tx5.len++] = 'a'+n;
-		}
-		
-		_uart1_send(&tx1, &rx1, 0);
-		_uart6_send(&tx6, &rx6, 0);
-		_uart2_send(&tx2, &rx2, 0);
-		_uart3_send(&tx3, &rx3, 0);
-		_uart4_send(&tx4, &rx4, 0);
-		_uart5_send(&tx5, &rx5, 0);
-
-		time = get_cur_time();
-		
-		tmp[sprintf(tmp, "%u", time.year)] = 0;
-		printf(tmp);
-		printf("-");
-		tmp[sprintf(tmp, "%u", time.month)] = 0;
-		printf(tmp);
-		printf("-");
-		tmp[sprintf(tmp, "%u", time.day)] = 0;
-		printf(tmp);
-		printf(" ");
-		tmp[sprintf(tmp, "%u", time.hour)] = 0;
-		printf(tmp);
-		printf(":");
-		tmp[sprintf(tmp, "%u", time.min)] = 0;
-		printf(tmp);
-		printf(":");
-		tmp[sprintf(tmp, "%u", time.sec )] = 0;
-		printf(tmp);
-		printf("+");
-		tmp[sprintf(tmp, "%u", time.week )] = 0;
-		printf(tmp);
-		printf("\r\n");
-//		UART_Write(UART1, tx.buf, tx.len);
-		//外部温度
-		get_external_temp((int*)&class_global.temp.external.val, (uint8_t*)&class_global.temp.external.state);
-		printf("external temp = ");
-		tmp[sprintf(tmp, "%d", class_global.temp.external.val )] = 0;
-		printf(tmp);
-		printf("\r\n");
-		printf("external temp state = ");
-		tmp[sprintf(tmp, "%d", class_global.temp.external.state )] = 0;
-		printf(tmp);
-		printf("\r\n");
-		
-		//内部温度
-		class_global.temp.internal.val = get_internal_temp();
-		printf("internal temp = ");
-		tmp[sprintf(tmp, "%d", class_global.temp.internal.val )] = 0;
-		printf(tmp);
-		printf("\r\n");
-	
-		vTaskDelay(3000);
-	}
 }
 

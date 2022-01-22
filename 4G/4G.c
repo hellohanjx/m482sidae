@@ -1378,6 +1378,7 @@ void main_task_4g(void)
 				case ST_CLOSE_TCP:		//关闭TCP
 					rs = c4g_close_tcp();
 					if(rs == TRUE){//关闭TCP成功
+						vTaskDelay(100);//@@这里需要等待100ms，不然老王那里可能有问题，返回异常
 						c4g_info.fsm = ST_CREAT_TCP;//跳转"创建TCP"
 					}else
 					if(rs == 2){//错误信息
@@ -1387,6 +1388,9 @@ void main_task_4g(void)
 					
 				case ST_CHK_TCP:		//查询TCP
 					rs = c4g_chk_tcp();
+					#if C_4G_LOG
+					printf("c4g_chk_tcp\r\n");
+					#endif
 					if(rs == TRUE){//没有建立TCP;需要重新创建TCP连接
 						c4g_info.fsm = ST_CREAT_TCP;//跳转“创建TCP”
 					}else//********************

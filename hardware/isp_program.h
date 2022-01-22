@@ -17,7 +17,7 @@
 /**************************************
 @标志位
 **************************************/
-#define FLASH_VAL_FLAG				0XAA				//flash标志
+#define FLASH_VAL_FLAG				0XAB				//flash标志
 #define FLASH_ADDR_FLAG				0x7F000			//flash标志位地址【1Byte】
 
 
@@ -68,6 +68,7 @@
 uint8_t _isp_config(void);
 uint32_t flash_param_get(uint32_t list_addr, uint32_t data_addr);
 uint8_t flash_param_set(uint32_t list_addr, uint32_t data_addr, uint32_t val);
-uint8_t reset_param_block(void);
+uint8_t judge_param(void);
+uint8_t reset_param(void);
 
 #endif

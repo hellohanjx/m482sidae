@@ -4,6 +4,8 @@
 #include "M480.h"
 
 enum {LED_OPEN, LED_CLOSE};
+enum{LED_BLUE, LED_RED};
+enum{RED_OPEN = 0, BLUE_OPEN = 0, RED_CLOSE = 1, BLUE_CLOSE = 1};
 
 //电路表字符的刷卡器1
 #define SWIPE1_LED_RED				PB11
@@ -28,5 +30,7 @@ enum {LED_OPEN, LED_CLOSE};
 #define SWIPE_LED_RED(X)		SWIPE##X##_LED_RED
 
 void _swipe_led_config(void);
+void swip_led_set(uint8_t channel, uint8_t type, uint8_t state);
+void swip_led_two(uint8_t channel, uint8_t blue, uint8_t red);
 
 #endif

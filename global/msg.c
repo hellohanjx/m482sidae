@@ -190,7 +190,7 @@ BaseType_t report_queue_get(void *const msg, TickType_t time)
 @说明：即时通信
 @时间：2019.12.8
 ********************/
-#define QUEUE_INSTANT_SIZE  	10	//队列大小
+#define QUEUE_INSTANT_SIZE  	60	//队列大小
 
 static QueueHandle_t queue_instant;//即时通信队列句柄
 /*
@@ -459,196 +459,42 @@ static BaseType_t uart6_sem_send(void)
 
 
 /*********************************************************************************************************************************************
-@说明：刷卡消息队列
-@时间：2021.12.24
+@说明：状态机队列
+@时间：2021.12.27
 *********************************************************************************************************************************************/
-/*******************
-@@@刷卡器1队列
-*******************/
-#define IREADER1_QUEEN_SIZE 			5			//状态机消息队列大小
-static QueueHandle_t handle_ireader1_queue;					//状态机消息句柄
+#define FSM_QUEEN_SIZE 			200			//状态机消息队列大小
+static QueueHandle_t handle_fsm_queue;//状态机消息句柄
 /*
 @功能：创建状态机消息队列
 */
-static void ireader1_queue_init(void)
+static void fsm_queue_init(void)
 {
-	handle_ireader1_queue = xQueueCreate(IREADER1_QUEEN_SIZE, sizeof(IREADER_MSG));//创建状态机队列
+	handle_fsm_queue = xQueueCreate(FSM_QUEEN_SIZE, sizeof(FSM_MSG));//创建状态机队列
 }
 /*
 @功能：发送一条信息到队列后
 @参数：msg，消息指针
 @说明：这里 msg 如果用 *msg，则是指针传递；msg则是值传递
 */
-static uint8_t ireader1_queue_send(IREADER_MSG msg)
+uint8_t fsm_queue_send(FSM_MSG msg)
 {
-	return xQueueSend(handle_ireader1_queue, (void*)&msg, 0);//发送消息不等待，不成功立即返回结果
+	BaseType_t rs = xQueueSend(handle_fsm_queue, (void*)&msg, 0);
+	if(rs == errQUEUE_FULL)
+	{
+		printf("fsm queue full\r\n");
+	}
+	return rs;//发送消息不等待，不成功立即返回结果
 }
 /*
 @功能：获取队列中的消息
 @参数：msg,消息缓冲指针；time，超时时间
 */
-static BaseType_t ireader1_queue_get(void *const msg, TickType_t time)
+BaseType_t fsm_queue_get(void *const msg, TickType_t time)
 {
-	return xQueueReceive(handle_ireader1_queue, msg, time);
-}
-
-/*******************
-@@@刷卡器2队列
-*******************/
-#define IREADER2_QUEEN_SIZE 			5			//状态机消息队列大小
-static QueueHandle_t handle_ireader2_queue;					//状态机消息句柄
-/*
-@功能：创建状态机消息队列
-*/
-static void ireader2_queue_init(void)
-{
-	handle_ireader2_queue = xQueueCreate(IREADER2_QUEEN_SIZE, sizeof(IREADER_MSG));//创建状态机队列
-}
-/*
-@功能：发送一条信息到队列后
-@参数：msg，消息指针
-@说明：这里 msg 如果用 *msg，则是指针传递；msg则是值传递
-*/
-static uint8_t ireader2_queue_send(IREADER_MSG msg)
-{
-	return xQueueSend(handle_ireader2_queue, (void*)&msg, 0);//发送消息不等待，不成功立即返回结果
-}
-/*
-@功能：获取队列中的消息
-@参数：msg,消息缓冲指针；time，超时时间
-*/
-static BaseType_t ireader2_queue_get(void *const msg, TickType_t time)
-{
-	return xQueueReceive(handle_ireader2_queue, msg, time);
-}
-
-/*******************
-@@@刷卡器3队列
-*******************/
-#define IREADER3_QUEEN_SIZE 			5			//状态机消息队列大小
-static QueueHandle_t handle_ireader3_queue;					//状态机消息句柄
-/*
-@功能：创建状态机消息队列
-*/
-static void ireader3_queue_init(void)
-{
-	handle_ireader3_queue = xQueueCreate(IREADER3_QUEEN_SIZE, sizeof(IREADER_MSG));//创建状态机队列
-}
-/*
-@功能：发送一条信息到队列后
-@参数：msg，消息指针
-@说明：这里 msg 如果用 *msg，则是指针传递；msg则是值传递
-*/
-static uint8_t ireader3_queue_send(IREADER_MSG msg)
-{
-	return xQueueSend(handle_ireader3_queue, (void*)&msg, 0);//发送消息不等待，不成功立即返回结果
-}
-/*
-@功能：获取队列中的消息
-@参数：msg,消息缓冲指针；time，超时时间
-*/
-static BaseType_t ireader3_queue_get(void *const msg, TickType_t time)
-{
-	return xQueueReceive(handle_ireader3_queue, msg, time);
-}
-
-/*******************
-@@@刷卡器4队列
-*******************/
-#define IREADER4_QUEEN_SIZE 			5			//状态机消息队列大小
-static QueueHandle_t handle_ireader4_queue;					//状态机消息句柄
-/*
-@功能：创建状态机消息队列
-*/
-static void ireader4_queue_init(void)
-{
-	handle_ireader4_queue = xQueueCreate(IREADER4_QUEEN_SIZE, sizeof(IREADER_MSG));//创建状态机队列
-}
-/*
-@功能：发送一条信息到队列后
-@参数：msg，消息指针
-@说明：这里 msg 如果用 *msg，则是指针传递；msg则是值传递
-*/
-static uint8_t ireader4_queue_send(IREADER_MSG msg)
-{
-	return xQueueSend(handle_ireader4_queue, (void*)&msg, 0);//发送消息不等待，不成功立即返回结果
-}
-/*
-@功能：获取队列中的消息
-@参数：msg,消息缓冲指针；time，超时时间
-*/
-static BaseType_t ireader4_queue_get(void *const msg, TickType_t time)
-{
-	return xQueueReceive(handle_ireader4_queue, msg, time);
-}
-
-/*******************
-@@@刷卡器5队列
-*******************/
-#define IREADER5_QUEEN_SIZE 			5			//状态机消息队列大小
-static QueueHandle_t handle_ireader5_queue;					//状态机消息句柄
-/*
-@功能：创建状态机消息队列
-*/
-static void ireader5_queue_init(void)
-{
-	handle_ireader5_queue = xQueueCreate(IREADER5_QUEEN_SIZE, sizeof(IREADER_MSG));//创建状态机队列
-}
-/*
-@功能：发送一条信息到队列后
-@参数：msg，消息指针
-@说明：这里 msg 如果用 *msg，则是指针传递；msg则是值传递
-*/
-static uint8_t ireader5_queue_send(IREADER_MSG msg)
-{
-	return xQueueSend(handle_ireader5_queue, (void*)&msg, 0);//发送消息不等待，不成功立即返回结果
-}
-/*
-@功能：获取队列中的消息
-@参数：msg,消息缓冲指针；time，超时时间
-*/
-static BaseType_t ireader5_queue_get(void *const msg, TickType_t time)
-{
-	return xQueueReceive(handle_ireader5_queue, msg, time);
-}
-
-/*******************
-@@@刷卡器6队列
-*******************/
-#define IREADER6_QUEEN_SIZE 			5			//状态机消息队列大小
-static QueueHandle_t handle_ireader6_queue;					//状态机消息句柄
-/*
-@功能：创建状态机消息队列
-*/
-static void ireader6_queue_init(void)
-{
-	handle_ireader6_queue = xQueueCreate(IREADER6_QUEEN_SIZE, sizeof(IREADER_MSG));//创建状态机队列
-}
-/*
-@功能：发送一条信息到队列后
-@参数：msg，消息指针
-@说明：这里 msg 如果用 *msg，则是指针传递；msg则是值传递
-*/
-static uint8_t ireader6_queue_send(IREADER_MSG msg)
-{
-	return xQueueSend(handle_ireader6_queue, (void*)&msg, 0);//发送消息不等待，不成功立即返回结果
-}
-/*
-@功能：获取队列中的消息
-@参数：msg,消息缓冲指针；time，超时时间
-*/
-static BaseType_t ireader6_queue_get(void *const msg, TickType_t time)
-{
-	return xQueueReceive(handle_ireader6_queue, msg, time);
+	return xQueueReceive(handle_fsm_queue, msg, time);
 }
 
 
-
-/*************************************
-@说明：定义队列操作数组
-*************************************/
-IREADER_QUEUE_SEND ireader_queue_send[] = {ireader1_queue_send, ireader2_queue_send, ireader3_queue_send, ireader4_queue_send, ireader5_queue_send, ireader6_queue_send};
-IREADER_QUEUE_GET ireader_queue_get[] = {ireader1_queue_get, ireader2_queue_get, ireader3_queue_get, ireader4_queue_get, ireader5_queue_get, ireader6_queue_get};
 /*************************************
 @说明：定义信号量操作数组
 *************************************/
@@ -673,10 +519,5 @@ void msg_init(void)
 	log_queue_init();
 	report_queue_init();
 	instant_queue_init();
-	ireader1_queue_init();
-	ireader2_queue_init();
-	ireader3_queue_init();
-	ireader4_queue_init();
-	ireader5_queue_init();
-	ireader6_queue_init();
+	fsm_queue_init();
 }

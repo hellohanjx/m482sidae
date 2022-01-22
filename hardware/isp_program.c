@@ -48,7 +48,7 @@ static void read_unique_id(uint32_t* id)
 	for (i = 0; i < 3; i++)            /* Get 96-bits UID. */
 	{
 		id[i] = FMC_ReadUID(i);
-		printf("  Unique ID %d ........................... [0x%08x]\n", i, id[i]);  /* information message */
+//		printf("  Unique ID %d ........................... [0x%08x]\n", i, id[i]);  /* information message */
 	}
 	
 }
@@ -283,7 +283,7 @@ uint8_t _isp_config(void)
 @功能：复位参数块
 @返回：TRUE，成功；FALSE，失败
 */
-uint8_t reset_param_block(void)
+uint8_t judge_param(void)
 {
 	uint8_t rs = FALSE;
 	SYS_UnlockReg();//解锁寄存器
@@ -327,4 +327,53 @@ uint8_t reset_param_block(void)
 	
 	SYS_LockReg();
 	return rs;
+}
+
+/*
+@功能：复位参数块
+@返回：TRUE，成功；FALSE，失败
+*/
+uint8_t reset_param(void)
+{
+	uint8_t rs = FALSE;
+	SYS_UnlockReg();//解锁寄存器
+	
+	{
+		printf("flash reset 2\r\n\r\n");
+		FMC_Erase(USR_DATA_BASE_ADDR);//擦除整块
+		
+		//写默认数据
+		flash_flag_set(FLASH_VAL_FLAG);																												//写标志位
+		flash_param_set(FLASH_LIST_Id, 						FLASH_ADDR_Id, 				 		DEF_FLASH_Id);		//1-id
+		flash_param_set(FLASH_LIST_Ip,	 					FLASH_ADDR_Ip,	 				 	DEF_FLASH_Ip);		//2-IP
+		flash_param_set(FLASH_LIST_Port, 					FLASH_ADDR_Port, 					DEF_FLASH_Port);	//3-端口
+		flash_param_set(FLASH_LIST_FactoryEn, 		FLASH_ADDR_FactoryEn, 		DEF_FLASH_FactoryEn);//4-工厂模式
+		flash_param_set(FLASH_LIST_CardType, 			FLASH_ADDR_CardType, 			DEF_FLASH_CardType);//5-刷卡器类型
+		flash_param_set(FLASH_LIST_PointBit, 			FLASH_ADDR_PointBit,		 	DEF_FLASH_PointBit);//6-小数位数
+		flash_param_set(FLASH_LIST_PriceBit, 			FLASH_ADDR_PriceBit,			DEF_FLASH_PriceBit);//7-价格位数
+		flash_param_set(FLASH_LIST_PriceMax, 			FLASH_ADDR_PriceMax, 			DEF_FLASH_PriceMax);		//8-最大价格
+			
+		
+		//校验写入数据
+		if(	DEF_FLASH_Id 						== flash_param_get(FLASH_LIST_Id,							FLASH_ADDR_Id)				//1-id
+		&&	DEF_FLASH_Ip 						== flash_param_get(FLASH_LIST_Ip, 						FLASH_ADDR_Ip)				//2-IP
+		&&	DEF_FLASH_Port 					== flash_param_get(FLASH_LIST_Port, 					FLASH_ADDR_Port)			//3-端口
+		&&	DEF_FLASH_FactoryEn 		== flash_param_get(FLASH_LIST_FactoryEn, 			FLASH_ADDR_FactoryEn)	//4-工厂模式
+		&&	DEF_FLASH_CardType 			== flash_param_get(FLASH_LIST_CardType, 			FLASH_ADDR_CardType)	//5-刷卡器类型
+		&&	DEF_FLASH_PointBit 			== flash_param_get(FLASH_LIST_PointBit, 			FLASH_ADDR_PointBit)		//6-小数位数
+		&&	DEF_FLASH_PriceBit 			== flash_param_get(FLASH_LIST_PriceBit, 			FLASH_ADDR_PriceBit)//7-价格位数
+		&&	DEF_FLASH_PriceMax 			== flash_param_get(FLASH_LIST_PriceMax, 			FLASH_ADDR_PriceMax)		//8-最大价格
+		&&  FLASH_VAL_FLAG 					== flash_flag_get()																										//标志位
+		)
+		{
+			rs = TRUE;
+		}
+		else
+		{
+			printf("flash reset err\r\n\r\n");
+		}
+	}
+	
+	SYS_LockReg();
+	return rs;	
 }

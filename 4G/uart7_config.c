@@ -22,7 +22,7 @@ void _uart7_config(uint32_t baud)
 	SC1->CTL |= (0x2 << 6);//(SC_CTL_RXTRGLV_Msk);//RX-FIFO ，3字节触发
 	SCUART_SetTimeoutCnt(SC1, 20);//FIFO 超时时间
 
-	NVIC_SetPriority(SC1_IRQn, 5);
+	NVIC_SetPriority(SC1_IRQn, 6);
 	NVIC_EnableIRQ(SC1_IRQn);
 	SCUART_ENABLE_INT(SC1, SC_INTEN_RDAIEN_Msk | SC_INTEN_RXTOIEN_Msk);//使能接收中断 | FIFO超时缓冲中断
 }
@@ -75,7 +75,7 @@ void SC1_IRQHandler(void)
 	if( SCUART_GET_INT_FLAG(SC1, SC_INTSTS_TERRIF_Msk) )//传输错误中断
 	{
 		SCUART_CLR_INT_FLAG(SC1,  SC_INTSTS_TERRIF_Msk);//清标志
-		while(1);
+//		while(1);
 	}
 }
 

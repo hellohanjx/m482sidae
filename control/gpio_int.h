@@ -3,6 +3,7 @@
 
 #include "M480.h"
 void _gpio_int_config(void);
+void tap_count_set(uint8_t channel, uint8_t mode);
 
 
 #endif

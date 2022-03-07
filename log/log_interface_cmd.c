@@ -9,6 +9,7 @@
 #include "isp_program.h"
 #include "log_interface_cmd.h"
 #include "4G.h"
+#include "temp.h"
 
 /*
 @功能：日志接收处理任务
@@ -341,6 +342,39 @@ void task_log_recv(void)
 									printf(tmp);
 									printf(",");
 								}
+								printf("\r\n");
+							}
+							else
+							{
+								printf("No support\r\n");
+							}
+						}
+						
+						/********************** 查温度 ****************************/
+						else
+						if( !strncasecmp((char*)&(rx.buf[3]), "TEMP", sizeof("TEMP") - 1) )
+						{
+							len = sizeof("TEMP") + 2;
+							if(rx.buf[len] == '?')//查询机器端口
+							{
+								get_external_temp( (int*)&class_global.temp.external.val, (uint8_t*)&class_global.temp.external.state );//获取外部温度
+								class_global.temp.internal.val = get_internal_temp();//获取cpu温度
+								
+								printf("external temp = ");
+								if( class_global.temp.external.state )
+								{
+									tmp[ sprintf(tmp, "%u", class_global.temp.external.val) ] = 0;
+									printf(tmp);
+									printf("\r\n");
+								}
+								else
+								{
+									printf("NULL\r\n");
+								}
+								
+								printf("internal temp = ");
+								tmp[ sprintf(tmp, "%u", class_global.temp.internal.val) ] = 0;
+								printf(tmp);
 								printf("\r\n");
 							}
 							else

@@ -158,8 +158,10 @@ static void idle_task( void *pvParameters )
 {
 	uint8_t state = FALSE;
 	portTickType xLastExecutionTime;
-	uint32_t temp_time = 0;
+	uint32_t send_temp_time = 0, get_temp_time = 0;
 	xLastExecutionTime = xTaskGetTickCount();
+	get_external_temp( (int*)&class_global.temp.external.val, (uint8_t*)&class_global.temp.external.state );//获取外部温度
+	class_global.temp.internal.val = get_internal_temp();//获取cpu温度
 	
 	#if(CPU_INFO)
 	char show_buf[500];
@@ -187,19 +189,19 @@ static void idle_task( void *pvParameters )
 		LED_BREATH = state;
 		state = !state;
 		
-		if( (temp_time == 0) || (xTaskGetTickCount() - temp_time > ONE_SECOND*600) )//10分钟传送一条温度信息
+		if( (send_temp_time == 0) || (xTaskGetTickCount() - send_temp_time > ONE_SECOND*600) )//10分钟传送一条温度信息
 		{
 			instant_equipment_state(TYPE_TEMP, class_global.temp.external.state, class_global.temp.external.val);//汇报温度
-			temp_time = xTaskGetTickCount();
+			send_temp_time = xTaskGetTickCount();
+		}
+		if( xTaskGetTickCount() - get_temp_time > ONE_SECOND*20 )//20秒采集一次
+		{
+			get_external_temp( (int*)&class_global.temp.external.val, (uint8_t*)&class_global.temp.external.state );//获取外部温度
+			class_global.temp.internal.val = get_internal_temp();//获取cpu温度
+			get_temp_time = xTaskGetTickCount();
 		}
 		
-		/* Perform this check every mainCHECK_DELAY milliseconds. */
 		vTaskDelayUntil( &xLastExecutionTime, 1000 );//绝对延时函数，每隔一段时间执行一次
-		
-//		if( xArePollingQueuesStillRunning() != pdTRUE )//检测所有任务是否运行正常
-//		{
-//			printf( "ERROR IN POLL Q\n" );
-//		}
 	}
 }
 

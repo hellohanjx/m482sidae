@@ -15,6 +15,7 @@
 #include "4G.h"
 #include "key.h"
 #include "isp_program.h"
+#include "temp.h"
 
 //设置模式的几种状态
 enum{ SET_INIT, SET_SETTING, SET_SHOWING };
@@ -598,23 +599,29 @@ void task_fsm( void )
 								
 								lcd_clear();
 								tmp[sprintf( tmp, "%010u", class_global.net.id )] = 0;
-								lcd_show_letter( tmp, 0, 0 );//显示机器号
+								lcd_show_letter( tmp, 0, 3 );//显示机器号
 								
 								tmp[sprintf( tmp, "%u", class_global.net.serverPort )] = 0;
 								lcd_show_letter( tmp, 0, 1 );//显示端口号
 								
-//							if( class_global.temp.external.state )
-//							{
-//								tmp[sprintf( tmp, "%d", class_global.temp.external.val )] = 0;
-//								lcd_show_letter( tmp, 0, 1 );//显示温度
-//							}
-//							else
-//							{
-//								lcd_show_letter( "X", 4, 1 );//显示温度
-//							}
+								//温度显示
+								#if(1)
+								get_external_temp( (int*)&class_global.temp.external.val, (uint8_t*)&class_global.temp.external.state );//获取外部温度
+								if( class_global.temp.external.state )
+								{
+									uint8_t len = sprintf( tmp, "% 4d", class_global.temp.external.val );
+									tmp[len] = 0;
+									lcd_show_letter( tmp, 5, 3 );//显示温度
+									lcd_show_letter( "℃", 7, 3 );
+								}
+								else
+								{
+									lcd_show_letter( "X", 7, 3 );//没有温度头
+								}
+								#endif
 									
 								lcd_show_letter( ( char* )class_global.net.arr_ip, 0, 2 );//显示ip
-								lcd_show_letter( ( char* )main_version, 0, 3 );//显示版本号
+								lcd_show_letter( ( char* )main_version, 0, 0 );//显示版本号
 								creat_ercode( 5, 0, 3 );//显示二维码							
 							}
 							else
@@ -673,7 +680,7 @@ void task_fsm( void )
 								}
 								vm_id++;
 								tmp[sprintf( tmp, "%010u", vm_id )] = 0;
-								lcd_show_letter( tmp, 0, 0 );//显示机器号
+								lcd_show_letter( tmp, 0, 3 );//显示机器号
 								set_working_timeout = xTaskGetTickCount();//更新切换按键时间
 							}
 						}

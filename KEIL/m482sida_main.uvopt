@@ -147,25 +147,41 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>496</LineNumber>
+          <LineNumber>614</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>73252</Address>
+          <Address>65248</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\12864_serial_zk\12864_driver.c</Filename>
+          <Filename>..\global\fsm.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\m482sida_main\../12864_serial_zk/12864_driver.c\496</Expression>
+          <Expression>\\\../global/fsm.c\614</Expression>
+        </Bp>
+        <Bp>
+          <Number>1</Number>
+          <Type>0</Type>
+          <LineNumber>610</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>65196</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>..\global\fsm.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\m482sida_main\../global/fsm.c\610</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow2>
         <Ww>
           <count>0</count>
           <WinNumber>2</WinNumber>
-          <ItemText>time,0x0A</ItemText>
+          <ItemText>tmp</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>

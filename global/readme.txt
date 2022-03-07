@@ -14,4 +14,8 @@
 220120		1.modify	解决 delay.c 中，”单次计时“-> while( !TIMER3->INTSTS & TIMER_INTSTS_TIF_Msk ); 远超定时时间，可达到几百mS~8S
 			2.modify	解决 fsm.c 中，class_global.trade.fsm 改为数组存储，否则不同通道同时刷卡会冲掉状态
 			
+220122		1.+++		添加外部温度显示，@@格式化可以补空格  sprintf( tmp, "% 4d", class_global.temp.external.val );
+			2.modify	版本号改为NU开头的
+			3.modify	版本号和机器ID显示位置交换
+			4.+++		日志指令添加查询内部/外部温度指令
 			

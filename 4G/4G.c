@@ -25,7 +25,7 @@
 
 
 #define C4G_PWR		PA15	//开/关机
-#define C4G_POWERON_TIME	300	//开机引脚保持时间（ms）
+#define C4G_POWERON_TIME	400	//开机引脚保持时间（ms）
 #define C4G_POWEROFF_TIME	800	//关机引脚保持时间（ms）
 #define C4G_RESET_TIME		500	//关机到开机间隔时间（ms）
 
@@ -239,7 +239,7 @@ static uint8_t c4g_chk_sim(void)
 	uint8_t err;
 
 	_uart7_send(&rx, (uint8_t*)chk_pin, (sizeof(chk_pin) - 1), callback_4g_recv);//串口发送
-	err = c4g_sem_get(5000);//等待超时 5s
+	err = c4g_sem_get(550);//等待超时 5s-> 5500ms
 	if(err == pdTRUE)
 	{
 		if( !strncasecmp((char*)&(rx->buf[2]), chk_pin_ack2, sizeof(chk_pin_ack2) - 1) )//从第3个字符开始比较,
@@ -264,7 +264,7 @@ static uint8_t c4g_chk_sim(void)
 
 /*
 @功能：查询sim卡注册
-@返回值：执行情况，是否可以进行下一步
+@返回值：执行情况，是否可以进行下一步c4g_chk_baud
 @注意：返回值的前2个字节是"/r/n",所以比较字符串的话需要从返回值第3个字节开始
 		sizeof(数组字符串) == 字符串长度+'0'结束符；所以这里比较的话需要减去'0'结束符
 		返回值"OK"在倒数第4个字节开始
@@ -976,7 +976,7 @@ static uint8_t c4g_check_Operators(void)
 		uint8_t err;
 		
 		_uart7_send(&rx, (uint8_t*)chk_Operators, (sizeof(chk_Operators) - 1), callback_4g_recv);//串口发送
-		err = c4g_sem_get(3000);//1.8s超时
+		err = c4g_sem_get(180000);//@@1.8s超时{Before}
 		if(err == pdTRUE)
 		{
 			if( !strncasecmp((char*)&(rx->buf[rx->len-4]), common_ack, sizeof(common_ack) - 1) )//比较最后的"OK"
@@ -1238,6 +1238,7 @@ void main_task_4g(void)
 					if(c4g_info.find_sim_timeout == 0)
 						c4g_info.find_sim_timeout = xTaskGetTickCount();//开始计时
 					
+					rs = c4g_close_cmd_echo();
 					rs = c4g_chk_sim();
 					if(rs == TRUE){
 						c4g_info.fsm = ST_CHK_ICCID;	//跳转->"查询ICCID"

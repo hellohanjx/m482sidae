@@ -2,7 +2,7 @@
 #include "string.h"
 #include "isp_program.h"
 
-volatile char main_version[] = {"Nu-220122"};//°æ±¾ºÅ
+volatile char main_version[] = {"Nu-240825"};//°æ±¾ºÅ
 
 
 

@@ -1077,9 +1077,9 @@ Image Symbol Table
     c4g_exit_transpartent2                   0x00007c99   Thumb Code    36  4g.o(.text)
     c4g_enter_transparent                    0x00007cbd   Thumb Code    54  4g.o(.text)
     c4g_change_transpartent                  0x00007cf3   Thumb Code    54  4g.o(.text)
-    c4g_check_Operators                      0x00007d29   Thumb Code   260  4g.o(.text)
-    c4g_chk_ICCID                            0x00007e2d   Thumb Code   134  4g.o(.text)
-    c4g_chk_quality                          0x00007eb3   Thumb Code   224  4g.o(.text)
+    c4g_check_Operators                      0x00007d29   Thumb Code   258  4g.o(.text)
+    c4g_chk_ICCID                            0x00007e2b   Thumb Code   134  4g.o(.text)
+    c4g_chk_quality                          0x00007eb1   Thumb Code   224  4g.o(.text)
     .text                                    0x00008718   Section        0  commucation.o(.text)
     callback_com_recv                        0x00008749   Thumb Code    62  commucation.o(.text)
     mail_to_bus                              0x00008787   Thumb Code   320  commucation.o(.text)
@@ -1853,9 +1853,9 @@ Image Symbol Table
     SC1_IRQHandler                           0x00007261   Thumb Code   292  uart7_config.o(.text)
     _uart7_send                              0x00007385   Thumb Code    96  uart7_config.o(.text)
     _4g_config                               0x00007401   Thumb Code    22  4g.o(.text)
-    main_task_4g                             0x00007f93   Thumb Code  1696  4g.o(.text)
-    get_4g_state                             0x00008633   Thumb Code     8  4g.o(.text)
-    get_4g_quality                           0x0000863b   Thumb Code   152  4g.o(.text)
+    main_task_4g                             0x00007f91   Thumb Code  1700  4g.o(.text)
+    get_4g_state                             0x00008635   Thumb Code     8  4g.o(.text)
+    get_4g_quality                           0x0000863d   Thumb Code   152  4g.o(.text)
     get_network_state                        0x00008719   Thumb Code    14  commucation.o(.text)
     report_to_communication                  0x00008727   Thumb Code    34  commucation.o(.text)
     main_task_communication                  0x000095bb   Thumb Code   116  commucation.o(.text)
@@ -2351,67 +2351,67 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
 
-      1740         16         32          0          0       5300   12864_driver.o
-      4888        464         84        468        228      14496   4g.o
-       224         10          0          0          0        900   adc.o
-      2324         94         32          0          0       8523   clk.o
-      3896        620          0          0          0       6460   commucation.o
-       140         18          0          0          0       4220   delay.o
-       196         30          0          0          0        928   dma.o
-       180          6          0          0          0       1933   eadc.o
-      2516         46          0          0          0       8841   fmc.o
-      5576       1000         12          0          0      32386   fsm.o
-       280         20          0         10       1232       3852   global.o
-       202          0          0          0          0       1902   gpio.o
-       796         60          0          0          0      28002   gpio_int.o
-       260          4          0          0          0      85654   hardware.o
-       680         90          0         24      61440       3372   heap_4.o
-      1888        352          0          0          0      90930   isp_program.o
-       324         10          0          0          0       3964   key.o
-        44         10          0          0          0        474   led_gpio.o
-       148          0          0          0          0       8502   list.o
-      2600        680          0          0          0       2028   log_interface_cmd.o
-       888        242          0         48          0      30189   main.o
-      1208        232          0         96          0       8820   msg.o
-      5428        324          0          0          0       8496   pack_load.o
-      2624        140          0          0          0       4781   pack_onlink_trade.o
-       556         90          0          0          0       1582   pack_state_changge.o
-       444         44          0          0          0       1394   pack_temp.o
-       916         24          0          0         16       4812   pdma.o
-      1026        120          0         12          0      22327   port.o
-      8784        210       7824        320      25316      15610   qr_encode.o
-       264         66          0          0          0       1457   qrcode_business_layer.o
-      4028         64          0          0        160      28330   queue.o
-       384        128          0          8          0       4506   retarget.o
-      2740        134          0         48          0      12017   rtc.o
-       688         30          0          0         12       3758   sc.o
-       316         18          0          0          0       2834   scuart.o
-       104         20        500          0       2048        904   startup_m480.o
-      3578        242          0         48          0      13376   swipe.o
-       464         26          0          0          0       1254   swipe_led.o
-       240          6          0          0          0       2272   sys.o
-       148         16          0          0          0        633   sys_clock.o
-       244         38          0         44          0     116813   system_m480.o
-       176         16          0          0          0        822   tap_set.o
-      1768        248          0          0          0       2698   task_swipe.o
-      6428        408          0         60        740      35445   tasks.o
-       344         36       1168          0          0       1894   temp.o
-      1448        110          0         20         40      11094   timers.o
-      1220         48         48          0          0       5300   uart.o
-      1172         26          0          0        102       1569   uart0_log.o
-       916         48          0          8        106       2469   uart1_config.o
-       844         48          0          8        106       2433   uart2_config.o
-       844         48          0          8        106       2421   uart3_config.o
-       844         48          0          8        106       2421   uart4_config.o
-       844         48          0          8        106       2421   uart5_config.o
-       704         40          0          8        106       2211   uart6_config.o
-       564         28          0          4        520      28486   uart7_config.o
-       276          4          0          0          0       1675   user_rtc.o
-       104          8          0          0          0        808   wacth_dog.o
-        28          4          0          0          0        643   wdt.o
+      1740         16         32          0          0       5324   12864_driver.o
+      4888        462         84        468        228      14536   4g.o
+       224         10          0          0          0        908   adc.o
+      2324         94         32          0          0       8531   clk.o
+      3896        620          0          0          0       6492   commucation.o
+       140         18          0          0          0       4236   delay.o
+       196         30          0          0          0        936   dma.o
+       180          6          0          0          0       1949   eadc.o
+      2516         46          0          0          0       8865   fmc.o
+      5576       1000         12          0          0      32434   fsm.o
+       280         20          0         10       1232       3888   global.o
+       202          0          0          0          0       1922   gpio.o
+       796         60          0          0          0      28022   gpio_int.o
+       260          4          0          0          0      85702   hardware.o
+       680         90          0         24      61440       3404   heap_4.o
+      1888        352          0          0          0      90962   isp_program.o
+       324         10          0          0          0       3988   key.o
+        44         10          0          0          0        482   led_gpio.o
+       148          0          0          0          0       8562   list.o
+      2600        680          0          0          0       2040   log_interface_cmd.o
+       888        242          0         48          0      30213   main.o
+      1208        232          0         96          0       8852   msg.o
+      5428        324          0          0          0       8516   pack_load.o
+      2624        140          0          0          0       4801   pack_onlink_trade.o
+       556         90          0          0          0       1606   pack_state_changge.o
+       444         44          0          0          0       1414   pack_temp.o
+       916         24          0          0         16       4844   pdma.o
+      1026        120          0         12          0      22395   port.o
+      8784        210       7824        320      25316      15662   qr_encode.o
+       264         66          0          0          0       1469   qrcode_business_layer.o
+      4028         64          0          0        160      28402   queue.o
+       384        128          0          8          0       4550   retarget.o
+      2740        134          0         48          0      12053   rtc.o
+       688         30          0          0         12       3786   sc.o
+       316         18          0          0          0       2850   scuart.o
+       104         20        500          0       2048        912   startup_m480.o
+      3578        242          0         48          0      13428   swipe.o
+       464         26          0          0          0       1262   swipe_led.o
+       240          6          0          0          0       2284   sys.o
+       148         16          0          0          0        641   sys_clock.o
+       244         38          0         44          0     116949   system_m480.o
+       176         16          0          0          0        830   tap_set.o
+      1768        248          0          0          0       2710   task_swipe.o
+      6428        408          0         60        740      35521   tasks.o
+       344         36       1168          0          0       1926   temp.o
+      1448        110          0         20         40      11138   timers.o
+      1220         48         48          0          0       5328   uart.o
+      1172         26          0          0        102       1593   uart0_log.o
+       916         48          0          8        106       2501   uart1_config.o
+       844         48          0          8        106       2465   uart2_config.o
+       844         48          0          8        106       2453   uart3_config.o
+       844         48          0          8        106       2453   uart4_config.o
+       844         48          0          8        106       2453   uart5_config.o
+       704         40          0          8        106       2243   uart6_config.o
+       564         28          0          4        520      28518   uart7_config.o
+       276          4          0          0          0       1699   user_rtc.o
+       104          8          0          0          0        820   wacth_dog.o
+        28          4          0          0          0        655   wdt.o
 
     ----------------------------------------------------------------------
-     82504       6960       9732       1260      92496     703642   Object Totals
+     82504       6958       9732       1260      92496     705378   Object Totals
          0          0         32          0          0          0   (incl. Generated)
          6          0          0          2          6          0   (incl. Padding)
 
@@ -2481,9 +2481,9 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-     87068       7080       9868       1264      92496     694214   Grand Totals
-     87068       7080       9868        460      92496     694214   ELF Image Totals (compressed)
-     87068       7080       9868        460          0          0   ROM Totals
+     87068       7078       9868       1264      92496     695950   Grand Totals
+     87068       7078       9868        460      92496     695950   ELF Image Totals (compressed)
+     87068       7078       9868        460          0          0   ROM Totals
 
 ==============================================================================
 
